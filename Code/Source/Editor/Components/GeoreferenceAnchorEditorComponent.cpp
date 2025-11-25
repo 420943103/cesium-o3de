@@ -15,7 +15,7 @@
 #include <AzToolsFramework/UI/PropertyEditor/PropertyEditorAPI.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 
 namespace Cesium
 {

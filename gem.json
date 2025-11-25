@@ -11,8 +11,12 @@
         "Gem"
     ],
     "user_tags": [
-        "Cesium", "Geospatial"
+        "Geospatial",
+        "Cesium"
     ],
-    "icon_path": "preview.png",
-    "requirements": ""
+    "icon_path": "",
+    "requirements": "",
+    "documentation_url": "",
+    "repo_uri": "",
+    "platforms": []
 }

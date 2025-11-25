@@ -30,6 +30,8 @@ set(FILES
     Source/Editor/Components/BingRasterOverlayEditorComponent.cpp
     Source/Editor/Components/TMSRasterOverlayEditorComponent.h
     Source/Editor/Components/TMSRasterOverlayEditorComponent.cpp
+ #   Source/Editor/Components/UrlTemplateRasterOverlayEditorComponent.h
+ #   Source/Editor/Components/UrlTemplateRasterOverlayEditorComponent.cpp
     Source/Editor/Components/GeoReferenceCameraFlyControllerEditor.h
     Source/Editor/Components/GeoReferenceCameraFlyControllerEditor.cpp
     Source/Editor/Components/TilesetCreditEditorComponent.h

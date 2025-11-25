@@ -72,12 +72,12 @@ namespace Cesium
 
         const auto& creditSystem = CesiumInterface::Get()->GetCreditSystem();
 
-        const auto& creditToShow = creditSystem->getCreditsToShowThisFrame();
-        bool creditUpdated = (creditToShow.size() != m_lastCreditCount);
+        const auto& snapshot = creditSystem->getSnapshot();
+        bool creditUpdated = (snapshot.currentCredits.size() != m_lastCreditCount);
         if (creditUpdated)
         {
             AZStd::string textCredit = "<!DOCTYPE html><html><body><ul>";
-            for (const auto& credit : creditToShow)
+            for (const auto& credit : snapshot.currentCredits)
             {
                 textCredit += "<li>";
                 textCredit += creditSystem->getHtml(credit).c_str();
@@ -93,10 +93,10 @@ namespace Cesium
             }
 
             m_creditCanvasEntityId = HtmlUiComponentHelper::CreateHtmlCanvasEntity(textCredit);
-            m_lastCreditCount = creditToShow.size();
+            m_lastCreditCount = snapshot.currentCredits.size();
         }
 
-        creditSystem->startNextFrame();
+        // creditSystem->startNextFrame(); // Method no longer exists
     }
 
     bool TilesetCreditComponent::OnInputChannelEventFiltered(const AzFramework::InputChannel& inputChannel)

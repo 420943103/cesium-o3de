@@ -50,8 +50,7 @@ namespace Cesium
                 if (loadPrimitive.m_materialId >= 0 && loadPrimitive.m_materialId < m_materials.size())
                 {
                     auto meshHandle = m_meshFeatureProcessor->AcquireMesh(
-                        AZ::Render::MeshHandleDescriptor{ loadPrimitive.m_modelAsset, false, false, {} },
-                        m_materials[loadPrimitive.m_materialId].m_material);
+                        AZ::Render::MeshHandleDescriptor{ loadPrimitive.m_modelAsset, m_materials[loadPrimitive.m_materialId].m_material });
                     m_meshFeatureProcessor->SetTransform(meshHandle, o3deTransform, o3deScale);
 
                     GltfPrimitive primitive;
@@ -117,7 +116,8 @@ namespace Cesium
     {
         if (primitive.m_materialIndex >= 0)
         {
-            m_meshFeatureProcessor->SetMaterialAssignmentMap(primitive.m_meshHandle, m_materials[primitive.m_materialIndex].m_material);
+            //m_meshFeatureProcessor->SetMaterialAssignmentMap(primitive.m_meshHandle, m_materials[primitive.m_materialIndex].m_material);
+            m_meshFeatureProcessor->SetCustomMaterials(primitive.m_meshHandle, m_materials[primitive.m_materialIndex].m_material);
         }
     }
 

@@ -9,22 +9,44 @@
 #pragma once 
 
 #include <Atom/Features/SrgSemantics.azsli>
-#include <viewsrg.srgi>
+#include <viewsrg_all.srgi>
 #include <Atom/RPI/ShaderResourceGroups/DefaultDrawSrg.azsli>
 #include <Atom/Features/PBR/LightingOptions.azsli>
 #include <Atom/Features/PBR/AlphaUtils.azsli>
 
+// MaterialParameters struct for compatibility with ParallaxMapping.azsli
+// Since GltfStandardPBR doesn't use Material Pipeline, we define an empty struct
+struct MaterialParameters {
+};
+
+// Cesium-specific MaterialInputs
 #include "./MaterialInputs/RasterOverlayInput.azsli"
-#include "./MaterialInputs/BaseColorInput.azsli"
-#include "./MaterialInputs/RoughnessInput.azsli"
-#include "./MaterialInputs/MetallicInput.azsli"
-#include "./MaterialInputs/SpecularInput.azsli"
-#include "./MaterialInputs/NormalInput.azsli"
-#include "./MaterialInputs/ClearCoatInput.azsli"
-#include "./MaterialInputs/OcclusionInput.azsli"
-#include "./MaterialInputs/EmissiveInput.azsli"
-#include "./MaterialInputs/ParallaxInput.azsli"
-#include "./MaterialInputs/UvSetCount.azsli"
+
+// Use O3DE engine MaterialInputs
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/BaseColorInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/RoughnessInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/MetallicInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/SpecularInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/NormalInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/ClearCoatInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/OcclusionInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/EmissiveInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/ParallaxInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/UvSetCount.azsli>
+
+
+struct ForwardPassOutputWithDepth
+{
+    // See above for descriptions of special encodings
+
+    float4 m_diffuseColor  : SV_Target0;
+    float4 m_specularColor : SV_Target1;
+    float4 m_albedo : SV_Target2;
+    float4 m_specularF0 : SV_Target3;
+    float4 m_normal : SV_Target4;
+    float m_depth : SV_Depth;
+};
+
 
 ShaderResourceGroup MaterialSrg : SRG_PerMaterial
 {
@@ -78,9 +100,9 @@ ShaderResourceGroup MaterialSrg : SRG_PerMaterial
 }
 
 // Callback function for ParallaxMapping.azsli
-DepthResult GetDepth(float2 uv, float2 uv_ddx, float2 uv_ddy)
+DepthResult GetDepth(const MaterialParameters params, Texture2D heightmap, sampler mapSampler, float2 uv, float2 uv_ddx, float2 uv_ddy)
 {
-    return SampleDepthFromHeightmap(MaterialSrg::m_heightmap, MaterialSrg::m_sampler, uv, uv_ddx, uv_ddy);
+    return SampleDepthFromHeightmap(heightmap, mapSampler, uv, uv_ddx, uv_ddy);
 }
 
 COMMON_OPTIONS_PARALLAX()

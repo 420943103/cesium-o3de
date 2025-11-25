@@ -3,6 +3,7 @@
 #include "Cesium/Gltf/GltfMaterialBuilder.h"
 #include <AzCore/std/string/string.h>
 #include <AzCore/std/smart_ptr/unique_ptr.h>
+#include <CesiumGltfReader/ImageDecoder.h>
 #include <glm/glm.hpp>
 #include <vector>
 #include <cstdint>
@@ -51,7 +52,7 @@ namespace Cesium
 
         void ResolveExternalImages(
             const AZStd::string& parentPath,
-            const CesiumGltfReader::GltfReader& gltfReader,
+            const CesiumGltfReader::ImageDecoder& gltfReader,
             CesiumGltf::Model& model,
             GenericIOManager& io);
 

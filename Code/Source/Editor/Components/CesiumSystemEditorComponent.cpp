@@ -29,7 +29,7 @@
 #include <AzFramework/Components/CameraBus.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Math/MatrixUtils.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 #include <glm/glm.hpp>
 
 // Work around QT macro namespace limitations.
@@ -371,7 +371,7 @@ namespace Cesium
     {
         OriginShiftRequestBus::Broadcast(
             &OriginShiftRequestBus::Events::SetOriginAndRotation, position,
-            glm::dmat3(glm::inverse(CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(position))));
+            glm::dmat3(glm::inverse(CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(position))));
     }
 
     void CesiumSystemEditorComponent::OnPrefabInstancePropagationEnd()

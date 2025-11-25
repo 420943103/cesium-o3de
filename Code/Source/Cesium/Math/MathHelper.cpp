@@ -51,25 +51,25 @@ namespace Cesium
         constexpr glm::dvec4 col2 = glm::dvec4(0.0, 0.0, 1.0, 0.0);
         constexpr glm::dvec4 col3 = glm::dvec4(0.0, 0.0, 0.0, 1.0);
 
-        auto column0 = glm::epsilonEqual(mat[0], col0, CesiumUtility::Math::EPSILON14);
+        auto column0 = glm::epsilonEqual(mat[0], col0, CesiumUtility::Math::Epsilon14);
         if (column0 != glm::bvec4(true))
         {
             return false;
         }
 
-        auto column1 = glm::epsilonEqual(mat[1], col1, CesiumUtility::Math::EPSILON14);
+        auto column1 = glm::epsilonEqual(mat[1], col1, CesiumUtility::Math::Epsilon14);
         if (column1 != glm::bvec4(true))
         {
             return false;
         }
 
-        auto column2 = glm::epsilonEqual(mat[2], col2, CesiumUtility::Math::EPSILON14);
+        auto column2 = glm::epsilonEqual(mat[2], col2, CesiumUtility::Math::Epsilon14);
         if (column2 != glm::bvec4(true))
         {
             return false;
         }
 
-        auto column3 = glm::epsilonEqual(mat[3], col3, CesiumUtility::Math::EPSILON14);
+        auto column3 = glm::epsilonEqual(mat[3], col3, CesiumUtility::Math::Epsilon14);
         if (column3 != glm::bvec4(true))
         {
             return false;
@@ -83,10 +83,10 @@ namespace Cesium
         glm::dvec3 pitchRollHead{};
 
         glm::dvec3 normalizeDirection = glm::normalize(direction);
-        pitchRollHead.x = CesiumUtility::Math::PI_OVER_TWO - glm::acos(normalizeDirection.z);
-        if (!CesiumUtility::Math::equalsEpsilon(normalizeDirection.z, 1.0, CesiumUtility::Math::EPSILON14))
+        pitchRollHead.x = CesiumUtility::Math::PiOverTwo - glm::acos(normalizeDirection.z);
+        if (!CesiumUtility::Math::equalsEpsilon(normalizeDirection.z, 1.0, CesiumUtility::Math::Epsilon14))
         {
-            pitchRollHead.z = glm::atan(normalizeDirection.y, normalizeDirection.x) - CesiumUtility::Math::PI_OVER_TWO;
+            pitchRollHead.z = glm::atan(normalizeDirection.y, normalizeDirection.x) - CesiumUtility::Math::PiOverTwo;
         }
 
         return pitchRollHead;

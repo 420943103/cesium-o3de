@@ -6,21 +6,11 @@
 #include <CesiumAsync/Future.h>
 #include <CesiumAsync/IAssetAccessor.h>
 #include <CesiumAsync/IAssetResponse.h>
-#include <aws/core/http/HttpTypes.h>
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-namespace Aws
-{
-    namespace Http
-    {
-        class HttpRequest;
-        class HttpResponse;
-    } // namespace Http
-} // namespace Aws
 
 namespace Cesium
 {
@@ -52,9 +42,9 @@ namespace Cesium
             return m_headers;
         }
 
-        gsl::span<const std::byte> data() const override
+        std::span<const std::byte> data() const override
         {
-            return gsl::span<const std::byte>(m_responseData.data(), m_responseData.size());
+            return std::span<const std::byte>(m_responseData.data(), m_responseData.size());
         }
 
     private:
@@ -108,28 +98,27 @@ namespace Cesium
     public:
         HttpAssetAccessor(HttpManager* httpManager);
 
-        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> requestAsset(
+        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> get(
             const CesiumAsync::AsyncSystem& asyncSystem, const std::string& url, const std::vector<THeader>& headers = {}) override;
 
-        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> post(
+        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> request(
             const CesiumAsync::AsyncSystem& asyncSystem,
+            const std::string& verb,
             const std::string& url,
             const std::vector<THeader>& headers = std::vector<THeader>(),
-            const gsl::span<const std::byte>& contentPayload = {}) override;
+            const std::span<const std::byte>& contentPayload = {}) override;
 
         void tick() noexcept override;
 
     private:
-        static std::string ConvertMethodToString(Aws::Http::HttpMethod method);
+        static std::string ConvertMethodToString(HttpMethod method);
 
         static CesiumAsync::HttpHeaders ConvertToCesiumHeaders(const std::vector<THeader>& headers);
 
-        static CesiumAsync::HttpHeaders ConvertToCesiumHeaders(const Aws::Http::HeaderValueCollection& headers);
-
         static std::shared_ptr<HttpAssetRequest> CreateO3DEAssetRequest(
-            const Aws::Http::HttpRequest& request, Aws::Http::HttpResponse* response);
+            const HttpRequest& request, const HttpResponse* response);
 
-        static std::unique_ptr<HttpAssetResponse> CreateO3DEAssetResponse(Aws::Http::HttpResponse& response);
+        static std::unique_ptr<HttpAssetResponse> CreateO3DEAssetResponse(const HttpResponse& response);
 
         static IOContent DecodeGzip(IOContent& content);
 

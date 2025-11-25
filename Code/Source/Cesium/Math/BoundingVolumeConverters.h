@@ -8,6 +8,7 @@
 #include <CesiumGeospatial/S2CellBoundingVolume.h>
 #include <CesiumGeometry/BoundingSphere.h>
 #include <CesiumGeometry/OrientedBoundingBox.h>
+#include <CesiumGeometry/BoundingCylinderRegion.h>
 
 namespace Cesium
 {
@@ -22,6 +23,8 @@ namespace Cesium
         TilesetBoundingVolume operator()(const CesiumGeospatial::BoundingRegionWithLooseFittingHeights& region);
 
         TilesetBoundingVolume operator()(const CesiumGeospatial::S2CellBoundingVolume& s2Volume);
+
+        TilesetBoundingVolume operator()(const CesiumGeometry::BoundingCylinderRegion& cylinder);
     };
 
     struct BoundingVolumeToAABB
@@ -35,6 +38,8 @@ namespace Cesium
         AZ::Aabb operator()(const CesiumGeospatial::BoundingRegionWithLooseFittingHeights& region);
 
         AZ::Aabb operator()(const CesiumGeospatial::S2CellBoundingVolume& s2Volume);
+
+        AZ::Aabb operator()(const CesiumGeometry::BoundingCylinderRegion& cylinder);
 
         glm::dmat4 m_transform;
     };
@@ -50,6 +55,8 @@ namespace Cesium
         TilesetBoundingVolume operator()(const CesiumGeospatial::BoundingRegionWithLooseFittingHeights& region);
 
         TilesetBoundingVolume operator()(const CesiumGeospatial::S2CellBoundingVolume& s2Volume);
+
+        TilesetBoundingVolume operator()(const CesiumGeometry::BoundingCylinderRegion& cylinder);
 
         glm::dmat4 m_transform;
     };

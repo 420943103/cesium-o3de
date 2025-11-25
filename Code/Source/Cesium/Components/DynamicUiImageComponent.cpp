@@ -69,16 +69,17 @@ namespace Cesium
             AZStd::vector<AZ::u8> decodeOutput;
             AZ::StringFunc::Base64::Decode(decodeOutput, base64View.data(), base64View.size());
 
-            CesiumGltfReader::GltfReader gltfReader;
+            CesiumGltfReader::ImageDecoder gltfReader;
+            CesiumGltf::Ktx2TranscodeTargets ktx2Target;
             auto imageResult = gltfReader.readImage(
-                gsl::span<const std::byte>(reinterpret_cast<const std::byte*>(decodeOutput.data()), decodeOutput.size()));
-            if (imageResult.image)
+                std::span<const std::byte>(reinterpret_cast<const std::byte*>(decodeOutput.data()), decodeOutput.size()), ktx2Target);
+            if (imageResult.pImage)
             {
                 auto pool = AZ::RPI::ImageSystemInterface::Get()->GetStreamingPool();
-                auto size = AZ::RHI::Size(imageResult.image->width, imageResult.image->height, 1);
+                auto size = AZ::RHI::Size(imageResult.pImage->width, imageResult.pImage->height, 1);
                 auto image = AZ::RPI::StreamingImage::CreateFromCpuData(
-                    *pool, AZ::RHI::ImageDimension::Image2D, size, AZ::RHI::Format::R8G8B8A8_UNORM, imageResult.image->pixelData.data(),
-                    imageResult.image->pixelData.size());
+                    *pool, AZ::RHI::ImageDimension::Image2D, size, AZ::RHI::Format::R8G8B8A8_UNORM, imageResult.pImage->pixelData.data(),
+                    imageResult.pImage->pixelData.size());
                 SetImage(image, size);
             }
 
@@ -98,15 +99,16 @@ namespace Cesium
                             return;
                         }
 
-                        CesiumGltfReader::GltfReader gltfReader;
-                        auto imageResult = gltfReader.readImage(content);
-                        if (imageResult.image)
+                        CesiumGltfReader::ImageDecoder gltfReader;
+                        CesiumGltf::Ktx2TranscodeTargets ktx2Target;
+                        auto imageResult = gltfReader.readImage(content, ktx2Target);
+                        if (imageResult.pImage)
                         {
                             auto pool = AZ::RPI::ImageSystemInterface::Get()->GetStreamingPool();
-                            auto size = AZ::RHI::Size(imageResult.image->width, imageResult.image->height, 1);
+                            auto size = AZ::RHI::Size(imageResult.pImage->width, imageResult.pImage->height, 1);
                             auto image = AZ::RPI::StreamingImage::CreateFromCpuData(
                                 *pool, AZ::RHI::ImageDimension::Image2D, size, AZ::RHI::Format::R8G8B8A8_UNORM,
-                                imageResult.image->pixelData.data(), imageResult.image->pixelData.size());
+                                imageResult.pImage->pixelData.data(), imageResult.pImage->pixelData.size());
                             DynamicUiImageRequestBus::Event(selfEntityId, &DynamicUiImageRequestBus::Events::SetImage, image, size);
                         }
                     });

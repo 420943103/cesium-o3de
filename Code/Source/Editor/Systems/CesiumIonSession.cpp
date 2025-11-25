@@ -127,7 +127,10 @@ namespace Cesium
             {
                 this->m_authorizeUrl = url;
                 QDesktopServices::openUrl(QUrl(this->m_authorizeUrl.c_str()));
-            })
+            },
+            CesiumIonClient::ApplicationData{}, // appData
+            "https://api.cesium.com/", // ionApiUrl
+            "https://ion.cesium.com/oauth") // ionAuthorizeUrl
             .thenInMainThread(
                 [this](CesiumIonClient::Connection&& connection)
                 {
@@ -163,7 +166,7 @@ namespace Cesium
 
         this->m_isResuming = true;
 
-        this->m_connection = CesiumIonClient::Connection(this->m_asyncSystem, this->m_assetAccessor, m_ionAccessToken.c_str());
+        this->m_connection = CesiumIonClient::Connection(this->m_asyncSystem, this->m_assetAccessor, m_ionAccessToken.c_str(), CesiumIonClient::ApplicationData{});
 
         // Verify that the connection actually works.
         this->m_connection.value()
@@ -275,10 +278,13 @@ namespace Cesium
 
         this->m_connection->tokens()
             .thenInMainThread(
-                [this](CesiumIonClient::Response<std::vector<CesiumIonClient::Token>>&& tokens)
+                [this](CesiumIonClient::Response<CesiumIonClient::TokenList>&& tokens)
                 {
                     this->m_isLoadingTokens = false;
-                    this->m_tokens = std::move(tokens.value);
+                    if (tokens.value)
+                    {
+                        this->m_tokens = std::move(tokens.value->items);
+                    }
                     this->TokensUpdated.Signal();
                     this->RefreshTokensIfNeeded();
                     this->RefreshAssetAccessToken();

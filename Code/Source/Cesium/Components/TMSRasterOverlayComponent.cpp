@@ -1,8 +1,8 @@
 #include <Cesium/Components/TMSRasterOverlayComponent.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/RTTI/BehaviorContext.h>
-#include <Cesium3DTilesSelection/RasterOverlay.h>
-#include <Cesium3DTilesSelection/TileMapServiceRasterOverlay.h>
+#include <CesiumRasterOverlays/RasterOverlay.h>
+#include <CesiumRasterOverlays/TileMapServiceRasterOverlay.h>
 
 namespace Cesium
 {
@@ -73,10 +73,10 @@ namespace Cesium
         RasterOverlayComponent::LoadRasterOverlay();
     }
 
-    std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> TMSRasterOverlayComponent::LoadRasterOverlayImpl()
+    std::unique_ptr<CesiumRasterOverlays::RasterOverlay> TMSRasterOverlayComponent::LoadRasterOverlayImpl()
     {
         // setup TMS option
-        Cesium3DTilesSelection::TileMapServiceRasterOverlayOptions options{};
+        CesiumRasterOverlays::TileMapServiceRasterOverlayOptions options{};
         if (m_source.m_maximumLevel > m_source.m_minimumLevel)
         {
             options.minimumLevel = m_source.m_minimumLevel;
@@ -91,7 +91,7 @@ namespace Cesium
             headers.emplace_back(header.first.c_str(), header.second.c_str());
         }
 
-        return std::make_unique<Cesium3DTilesSelection::TileMapServiceRasterOverlay>(
+        return std::make_unique<CesiumRasterOverlays::TileMapServiceRasterOverlay>(
             "TMSRasterOverlay", m_source.m_url.c_str(), headers, options);
     }
 } // namespace Cesium

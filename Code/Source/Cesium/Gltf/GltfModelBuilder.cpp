@@ -42,11 +42,12 @@ namespace Cesium
     {
         auto fileContent = io.GetFileContent({ "", filePath });
         CesiumGltfReader::GltfReader reader;
-        auto load = reader.readModel(gsl::span<const std::byte>(fileContent.data(), fileContent.size()));
+        CesiumGltfReader::ImageDecoder imgDecoder;
+        auto load = reader.readGltf(std::span<const std::byte>(fileContent.data(), fileContent.size()));
         if (load.model)
         {
             AZStd::string parentPath = io.GetParentPath(filePath);
-            ResolveExternalImages(parentPath, reader, *load.model, io);
+            ResolveExternalImages(parentPath, imgDecoder, *load.model, io);
             ResolveExternalBuffers(parentPath, *load.model, io);
 
             return Create(*load.model, option, result);
@@ -177,11 +178,11 @@ namespace Cesium
     }
 
     void GltfModelBuilder::ResolveExternalImages(
-        const AZStd::string& parentPath, const CesiumGltfReader::GltfReader& gltfReader, CesiumGltf::Model& model, GenericIOManager& io)
+        const AZStd::string& parentPath, const CesiumGltfReader::ImageDecoder& gltfReader, CesiumGltf::Model& model, GenericIOManager& io)
     {
         for (CesiumGltf::Image& image : model.images)
         {
-            if (!image.cesium.pixelData.empty())
+            if (!image.pAsset->pixelData.empty())
             {
                 continue;
             }
@@ -200,14 +201,14 @@ namespace Cesium
             {
                 continue;
             }
-
-            auto readResult = gltfReader.readImage(gsl::span<const std::byte>(content.data(), content.size()));
-            if (!readResult.image)
+            CesiumGltf::Ktx2TranscodeTargets ktx2Targets;
+            auto readResult = gltfReader.readImage(std::span<const std::byte>(content.data(), content.size()), ktx2Targets);
+            if (!readResult.pImage)
             {
                 continue;
             }
 
-            image.cesium = std::move(*readResult.image);
+            image.pAsset = std::move(readResult.pImage);
         }
     }
 

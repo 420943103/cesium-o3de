@@ -33,7 +33,7 @@
 
 #include <Cesium3DTilesSelection/Tileset.h>
 #include <Cesium3DTilesSelection/TilesetExternals.h>
-#include <Cesium3DTilesSelection/RasterOverlay.h>
+#include <CesiumRasterOverlays/RasterOverlay.h>
 
 #ifdef AZ_COMPILER_MSVC
 #pragma pop_macro("OPAQUE")
@@ -162,13 +162,13 @@ namespace Cesium
                 externals, source.m_cesiumIonAssetId, source.m_cesiumIonAssetToken.c_str(), options);
         }
 
-        bool AddRasterOverlay(std::unique_ptr<Cesium3DTilesSelection::RasterOverlay>& rasterOverlay) override
+        bool AddRasterOverlay(std::unique_ptr<CesiumRasterOverlays::RasterOverlay>& rasterOverlay) override
         {
             if (m_tileset)
             {
                 if (m_renderResourcesPreparer->AddRasterLayer(rasterOverlay.get()))
                 {
-                    m_tileset->getOverlays().add(std::move(rasterOverlay));
+                    m_tileset->getOverlays().add(rasterOverlay.release());
                     return true;
                 }
             }
@@ -176,7 +176,7 @@ namespace Cesium
             return false;
         }
 
-        void RemoveRasterOverlay(Cesium3DTilesSelection::RasterOverlay* rasterOverlay) override
+        void RemoveRasterOverlay(CesiumRasterOverlays::RasterOverlay* rasterOverlay) override
         {
             if (m_tileset)
             {
@@ -367,7 +367,7 @@ namespace Cesium
         return m_tilesetConfiguration;
     }
 
-    AZ::Aabb TilesetComponent::GetWorldBounds()
+    AZ::Aabb TilesetComponent::GetWorldBounds() const
     {
         if (!m_impl->m_tileset)
         {
@@ -383,7 +383,7 @@ namespace Cesium
         return std::visit(BoundingVolumeToAABB{ m_impl->m_absToRelWorld * m_transform }, rootTile->getBoundingVolume());
     }
 
-    AZ::Aabb TilesetComponent::GetLocalBounds()
+    AZ::Aabb TilesetComponent::GetLocalBounds() const
     {
         if (!m_impl->m_tileset)
         {
@@ -512,23 +512,36 @@ namespace Cesium
                 }
 
                 // retrieve tiles are visible in the current frame
-                const Cesium3DTilesSelection::ViewUpdateResult& viewUpdate = m_impl->m_tileset->updateView(viewStates);
+                const Cesium3DTilesSelection::ViewUpdateResult& viewUpdate = m_impl->m_tileset->updateViewGroup(m_impl->m_tileset->getDefaultViewGroup(), viewStates);
+                m_impl->m_tileset->loadTiles();
 
-                for (Cesium3DTilesSelection::Tile* tile : viewUpdate.tilesToNoLongerRenderThisFrame)
+                for (const auto& tile : viewUpdate.tilesFadingOut)
                 {
-                    if (tile->getState() == Cesium3DTilesSelection::Tile::LoadState::Done)
+                    if (tile->getState() == Cesium3DTilesSelection::TileLoadState::Done)
                     {
-                        void* renderResources = tile->getRendererResources();
-                        m_impl->m_renderResourcesPreparer->SetVisible(renderResources, false);
+                        if (tile->getContent().getRenderContent())
+                        {
+                            void* renderResources = tile->getContent().getRenderContent()->getRenderResources();
+                            if (renderResources)
+                            {
+                                m_impl->m_renderResourcesPreparer->SetVisible(renderResources, false);
+                            }
+                        }
                     }
                 }
 
-                for (Cesium3DTilesSelection::Tile* tile : viewUpdate.tilesToRenderThisFrame)
+                for (const auto& tile : viewUpdate.tilesToRenderThisFrame)
                 {
-                    if (tile->getState() == Cesium3DTilesSelection::Tile::LoadState::Done)
+                    if (tile->getState() == Cesium3DTilesSelection::TileLoadState::Done)
                     {
-                        void* renderResources = tile->getRendererResources();
-                        m_impl->m_renderResourcesPreparer->SetVisible(renderResources, true);
+                        if (tile->getContent().getRenderContent())
+                        {
+                            void* renderResources = tile->getContent().getRenderContent()->getRenderResources();
+                            if (renderResources)
+                            {
+                                m_impl->m_renderResourcesPreparer->SetVisible(renderResources, true);
+                            }
+                        }
                     }
                 }
             }
@@ -541,4 +554,57 @@ namespace Cesium
         m_impl->m_configFlags |= Impl::ConfigurationDirtyFlags::TransformChange;
         m_impl->FlushTransformChange(m_transform);
     }
+
+    void TilesetComponent::SetEntityVisibility(const AZ::EntityId& entityId, bool visible)
+    {
+        // ��ȡʵ��
+        //    AZ::Entity* entity = nullptr;
+        //    AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationRequests::FindEntity, entityId);
+        //    if (!entity)
+        //    {
+        //        AZ_Error("SetEntityVisibility", false, "Entity not found");
+        //        return;
+        //    }
+
+        //    // ��ȡTilesetComponent
+        //    Cesium::TilesetComponent* tilesetComponent = entity->FindComponent<Cesium::TilesetComponent>();
+        //    if (!tilesetComponent)
+        //    {
+        //        AZ_Error("SetEntityVisibility", false, "TilesetComponent not found on entity");
+        //        return;
+        //    }
+
+        //    // ��ȡTileset
+        //    auto tileset = tilesetComponent->GetTileset();
+        //    if (!tileset)
+        //    {
+        //        AZ_Error("SetEntityVisibility", false, "Tileset not found on TilesetComponent");
+        //        return;
+        //    }
+
+        //    // ��ȡ���ڵ�
+        //    auto rootTile = tileset->getRootTile();
+        //    if (!rootTile)
+        //    {
+        //        AZ_Error("SetEntityVisibility", false, "Root tile not found on Tileset");
+        //        return;
+        //    }
+
+        //    // �������ڵ��ϵ������ӽڵ㲢���ÿɼ���
+        //    std::function<void(Cesium3DTilesSelection::Tile&)> setVisibility = [&](Cesium3DTilesSelection::Tile& tile)
+        //    {
+        //        if (tile.getState() == Cesium3DTilesSelection::Tile::LoadState::Done)
+        //        {
+        //            void* renderResources = tile.getRendererResources();
+        //            tilesetComponent->GetRenderResourcesPreparer()->SetVisible(renderResources, visible);
+        //        }
+
+        //        for (auto& child : tile.getChildren())
+        //        {
+        //            setVisibility(*child);
+        //        }
+        //    };
+    
+
 } // namespace Cesium
+}

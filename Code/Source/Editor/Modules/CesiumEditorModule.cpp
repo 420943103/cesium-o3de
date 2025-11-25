@@ -5,6 +5,7 @@
 #include "Editor/Components/BingRasterOverlayEditorComponent.h"
 #include "Editor/Components/CesiumIonRasterOverlayEditorComponent.h"
 #include "Editor/Components/TMSRasterOverlayEditorComponent.h"
+//#include "Editor/Components/UrlTemplateRasterOverlayEditorComponent.h"
 #include "Editor/Components/TilesetCreditEditorComponent.h"
 #include "Editor/Components/GeoreferenceAnchorEditorComponent.h"
 #include "Editor/Components/OriginShiftEditorComponent.h"
@@ -30,7 +31,7 @@ namespace Cesium
                   OriginShiftEditorComponent::CreateDescriptor(), GeoreferenceAnchorEditorComponent::CreateDescriptor(),
                   TilesetEditorComponent::CreateDescriptor(), GeoReferenceCameraControllerEditor::CreateDescriptor(),
                   BingRasterOverlayEditorComponent::CreateDescriptor(), CesiumIonRasterOverlayEditorComponent::CreateDescriptor(),
-                  TMSRasterOverlayEditorComponent::CreateDescriptor() });
+                  TMSRasterOverlayEditorComponent::CreateDescriptor()});
         }
 
         /**

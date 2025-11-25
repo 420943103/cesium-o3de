@@ -42,7 +42,7 @@ namespace Cesium
         {
             if (m_rasterOverlayObserverPtr)
             {
-                Cesium3DTilesSelection::RasterOverlayOptions& options = m_rasterOverlayObserverPtr->getOptions();
+                CesiumRasterOverlays::RasterOverlayOptions& options = m_rasterOverlayObserverPtr->getOptions();
                 options.maximumSimultaneousTileLoads = static_cast<std::int32_t>(configuration.m_maximumSimultaneousTileLoads);
                 options.subTileCacheBytes = static_cast<std::int64_t>(configuration.m_maximumCacheBytes);
             }
@@ -50,7 +50,7 @@ namespace Cesium
 
         RasterOverlayContainerLoadedEvent::Handler m_rasterOverlayContainerLoadedHandler;
         RasterOverlayContainerUnloadedEvent::Handler m_rasterOverlayContainerUnloadedHandler;
-        Cesium3DTilesSelection::RasterOverlay* m_rasterOverlayObserverPtr;
+        CesiumRasterOverlays::RasterOverlay* m_rasterOverlayObserverPtr;
     };
 
     void RasterOverlayComponent::Reflect(AZ::ReflectContext* context)
@@ -144,7 +144,7 @@ namespace Cesium
         }
     }
 
-    std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> RasterOverlayComponent::LoadRasterOverlayImpl()
+    std::unique_ptr<CesiumRasterOverlays::RasterOverlay> RasterOverlayComponent::LoadRasterOverlayImpl()
     {
         return nullptr;
     }

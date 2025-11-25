@@ -4,7 +4,7 @@
 #include <AzCore/std/smart_ptr/unique_ptr.h>
 #include <CesiumGeospatial/Ellipsoid.h>
 #include <CesiumGeospatial/Cartographic.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 
 namespace Cesium
 {
@@ -54,6 +54,6 @@ namespace Cesium
 
     glm::dmat4 GeospatialHelper::EastNorthUpToECEF(const glm::dvec3& ecefPosition)
     {
-        return CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(ecefPosition);
+        return CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(ecefPosition);
     }
 } // namespace Cesium

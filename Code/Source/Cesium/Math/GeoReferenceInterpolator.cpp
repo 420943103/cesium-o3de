@@ -9,7 +9,7 @@
 
 #include "Cesium/Math/GeoReferenceInterpolator.h"
 #include "Cesium/Math/MathHelper.h"
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 #include <CesiumGeospatial/Ellipsoid.h>
 #include <CesiumUtility/Math.h>
 #include <glm/gtx/compatibility.hpp>
@@ -103,7 +103,7 @@ namespace Cesium
         m_beginPitchRollHead = CalculatePitchRollHead(m_begin, beginDirection);
         m_destinationPitchRollHead = CalculatePitchRollHead(m_destination, destinationDirection);
 
-        glm::dmat4 enuToECEF = CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(m_current);
+        glm::dmat4 enuToECEF = CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(m_current);
         m_currentOrientation = glm::dquat(enuToECEF) * glm::dquat(m_beginPitchRollHead);
     }
 
@@ -149,14 +149,14 @@ namespace Cesium
             CesiumGeospatial::Cartographic{ currentLongitude, currentLatitude, currentHeight });
 
         // interpolate current orientation
-        glm::dmat4 enuToECEF = CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(m_current);
+        glm::dmat4 enuToECEF = CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(m_current);
         glm::dvec3 currentPitchRollHead = glm::lerp(m_beginPitchRollHead, m_destinationPitchRollHead, t);
         m_currentOrientation = glm::dquat(enuToECEF) * glm::dquat(currentPitchRollHead);
     }
 
     glm::dvec3 GeoReferenceInterpolator::CalculatePitchRollHead(const glm::dvec3& position, const glm::dvec3& direction)
     {
-        glm::dmat4 enuToECEF = CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(position);
+        glm::dmat4 enuToECEF = CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(position);
         glm::dmat4 ecefToEnu = glm::inverse(enuToECEF);
         glm::dvec3 enuDirection = glm::dvec3(ecefToEnu * glm::dvec4(direction, 0.0));
         return MathHelper::CalculatePitchRollHead(enuDirection);

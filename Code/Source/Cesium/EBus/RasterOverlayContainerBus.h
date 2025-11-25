@@ -2,7 +2,7 @@
 
 #include <AzCore/EBus/Event.h>
 #include <AzCore/Component/ComponentBus.h>
-#include <Cesium3DTilesSelection/RasterOverlay.h>
+#include <CesiumRasterOverlays/RasterOverlay.h>
 #include <memory>
 
 namespace Cesium
@@ -13,9 +13,9 @@ namespace Cesium
     class RasterOverlayContainerRequest : public AZ::ComponentBus
     {
     public:
-        virtual bool AddRasterOverlay(std::unique_ptr<Cesium3DTilesSelection::RasterOverlay>& rasterOverlay) = 0;
+        virtual bool AddRasterOverlay(std::unique_ptr<CesiumRasterOverlays::RasterOverlay>& rasterOverlay) = 0;
 
-        virtual void RemoveRasterOverlay(Cesium3DTilesSelection::RasterOverlay* rasterOverlay) = 0;
+        virtual void RemoveRasterOverlay(CesiumRasterOverlays::RasterOverlay* rasterOverlay) = 0;
 
         virtual void BindContainerLoadedEvent(RasterOverlayContainerLoadedEvent::Handler& handler) = 0;
 

@@ -20,7 +20,7 @@ namespace Cesium
         m_taskProcessor = std::make_shared<TaskProcessor>();
 
         // initialize credit system
-        m_creditSystem = std::make_shared<Cesium3DTilesSelection::CreditSystem>();
+        m_creditSystem = std::make_shared<CesiumUtility::CreditSystem>();
 
         // initialize logger
         m_logger = spdlog::default_logger();
@@ -64,7 +64,7 @@ namespace Cesium
         return m_logger;
     }
 
-    const std::shared_ptr<Cesium3DTilesSelection::CreditSystem>& CesiumSystem::GetCreditSystem() const
+    const std::shared_ptr<CesiumUtility::CreditSystem>& CesiumSystem::GetCreditSystem() const
     {
         return m_creditSystem;
     }

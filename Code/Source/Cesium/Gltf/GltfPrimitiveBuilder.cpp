@@ -798,7 +798,7 @@ namespace Cesium
             const glm::vec3& p1 = m_positions[i + 1];
             const glm::vec3& p2 = m_positions[i + 2];
             glm::vec3 normal = glm::cross(p1 - p0, p2 - p0);
-            if (CesiumUtility::Math::equalsEpsilon(glm::dot(normal, normal), 0.0, CesiumUtility::Math::EPSILON5))
+            if (CesiumUtility::Math::equalsEpsilon(glm::dot(normal, normal), 0.0, CesiumUtility::Math::Epsilon5))
             {
                 normal = glm::vec3(0.0f, 1.0f, 0.0f);
             }

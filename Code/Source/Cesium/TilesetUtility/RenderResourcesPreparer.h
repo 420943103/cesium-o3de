@@ -26,7 +26,7 @@ namespace CesiumGltf
     struct Model;
 }
 
-namespace Cesium3DTilesSelection
+namespace CesiumRasterOverlays
 {
     class RasterOverlay;
 }
@@ -67,29 +67,33 @@ namespace Cesium
 
         void SetVisible(void* renderResources, bool visible);
 
-        bool AddRasterLayer(const Cesium3DTilesSelection::RasterOverlay* rasterOverlay);
+        bool AddRasterLayer(const CesiumRasterOverlays::RasterOverlay* rasterOverlay);
 
-        void RemoveRasterLayer(const Cesium3DTilesSelection::RasterOverlay* rasterOverlay);
+        void RemoveRasterLayer(const CesiumRasterOverlays::RasterOverlay* rasterOverlay);
 
-        void* prepareInLoadThread(const CesiumGltf::Model& model, const glm::dmat4& transform) override;
+        CesiumAsync::Future<Cesium3DTilesSelection::TileLoadResultAndRenderResources> prepareInLoadThread(
+            const CesiumAsync::AsyncSystem& asyncSystem,
+            Cesium3DTilesSelection::TileLoadResult&& tileLoadResult,
+            const glm::dmat4& transform,
+            const std::any& rendererOptions) override;
 
         void* prepareInMainThread(Cesium3DTilesSelection::Tile& tile, void* pLoadThreadResult) override;
 
         void free(Cesium3DTilesSelection::Tile& tile, void* pLoadThreadResult, void* pMainThreadResult) noexcept override;
 
-        void* prepareRasterInLoadThread(const CesiumGltf::ImageCesium& image) override;
+        void* prepareRasterInLoadThread(CesiumGltf::ImageAsset& image, const std::any& rendererOptions) override;
 
-        void* prepareRasterInMainThread(const Cesium3DTilesSelection::RasterOverlayTile& rasterTile, void* pLoadThreadResult) override;
+        void* prepareRasterInMainThread(CesiumRasterOverlays::RasterOverlayTile& rasterTile, void* pLoadThreadResult) override;
 
         void freeRaster(
-            const Cesium3DTilesSelection::RasterOverlayTile& rasterTile,
+            const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
             void* pLoadThreadResult,
             void* pMainThreadResult) noexcept override;
 
         void attachRasterInMainThread(
             const Cesium3DTilesSelection::Tile& tile,
             std::int32_t overlayTextureCoordinateID,
-            const Cesium3DTilesSelection::RasterOverlayTile& rasterTile,
+            const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
             void* mainThreadRasterResources,
             const glm::dvec2& translation,
             const glm::dvec2& scale) override;
@@ -97,7 +101,7 @@ namespace Cesium
         void detachRasterInMainThread(
             const Cesium3DTilesSelection::Tile& tile,
             std::int32_t overlayTextureCoordinateID,
-            const Cesium3DTilesSelection::RasterOverlayTile& rasterTile,
+            const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
             void* mainThreadRasterResources) noexcept override;
 
     private:
@@ -110,7 +114,7 @@ namespace Cesium
         glm::dmat4 m_transform;
 
         AZStd::vector<AZ::Data::Instance<AZ::RPI::Material>> m_compileMaterialsQueue;
-        AZStd::map<const Cesium3DTilesSelection::RasterOverlay*, std::uint32_t> m_rasterOverlayLayers;
+        AZStd::map<const CesiumRasterOverlays::RasterOverlay*, std::uint32_t> m_rasterOverlayLayers;
         AZStd::vector<std::uint32_t> m_freeRasterLayers;
     };
 } // namespace Cesium

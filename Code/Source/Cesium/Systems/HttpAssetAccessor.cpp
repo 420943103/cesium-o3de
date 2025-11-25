@@ -14,12 +14,12 @@ namespace Cesium
             engineVersion + " (Project " + PlatformInfo::GetProjectName().c_str() + " Engine O3DE " + engineVersion + ")";
     }
 
-    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> HttpAssetAccessor::requestAsset(
+    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> HttpAssetAccessor::get(
         const CesiumAsync::AsyncSystem& asyncSystem, const std::string& url, const std::vector<THeader>& headers)
     {
         CesiumAsync::HttpHeaders requestHeaders = ConvertToCesiumHeaders(headers);
         requestHeaders[USER_AGENT_HEADER_KEY] = m_userAgentHeaderValue;
-        HttpRequestParameter parameter(AZStd ::string(url.c_str()), Aws::Http::HttpMethod::HTTP_GET, std::move(requestHeaders));
+        HttpRequestParameter parameter(AZStd::string(url.c_str()), HttpMethod::HTTP_GET, std::move(requestHeaders));
         return m_httpManager->AddRequest(asyncSystem, std::move(parameter))
             .thenImmediately(
                 [](HttpResult&& result) -> std::shared_ptr<CesiumAsync::IAssetRequest>
@@ -28,17 +28,33 @@ namespace Cesium
                 });
     }
 
-    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> HttpAssetAccessor::post(
+    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> HttpAssetAccessor::request(
         const CesiumAsync::AsyncSystem& asyncSystem,
+        const std::string& verb,
         const std::string& url,
         const std::vector<THeader>& headers,
-        const gsl::span<const std::byte>& contentPayload)
+        const std::span<const std::byte>& contentPayload)
     {
         CesiumAsync::HttpHeaders requestHeaders = ConvertToCesiumHeaders(headers);
         requestHeaders[USER_AGENT_HEADER_KEY] = m_userAgentHeaderValue;
         AZStd::string requestBody(reinterpret_cast<const char*>(contentPayload.data()), contentPayload.size());
+        
+        // Convert verb string to HTTP method
+        HttpMethod httpMethod = HttpMethod::HTTP_POST; // default
+        if (verb == "GET") {
+            httpMethod = HttpMethod::HTTP_GET;
+        } else if (verb == "POST") {
+            httpMethod = HttpMethod::HTTP_POST;
+        } else if (verb == "PUT") {
+            httpMethod = HttpMethod::HTTP_PUT;
+        } else if (verb == "DELETE") {
+            httpMethod = HttpMethod::HTTP_DELETE;
+        } else if (verb == "PATCH") {
+            httpMethod = HttpMethod::HTTP_PATCH;
+        }
+        
         HttpRequestParameter parameter(
-            AZStd ::string(url.c_str()), Aws::Http::HttpMethod::HTTP_POST, std::move(requestHeaders), std::move(requestBody));
+            AZStd::string(url.c_str()), httpMethod, std::move(requestHeaders), std::move(requestBody));
         return m_httpManager->AddRequest(asyncSystem, std::move(parameter))
             .thenImmediately(
                 [](HttpResult&& result) -> std::shared_ptr<CesiumAsync::IAssetRequest>
@@ -51,21 +67,21 @@ namespace Cesium
     {
     }
 
-    std::string HttpAssetAccessor::ConvertMethodToString(Aws::Http::HttpMethod method)
+    std::string HttpAssetAccessor::ConvertMethodToString(HttpMethod method)
     {
         switch (method)
         {
-        case Aws::Http::HttpMethod::HTTP_GET:
+        case HttpMethod::HTTP_GET:
             return "GET";
-        case Aws::Http::HttpMethod::HTTP_POST:
+        case HttpMethod::HTTP_POST:
             return "POST";
-        case Aws::Http::HttpMethod::HTTP_DELETE:
+        case HttpMethod::HTTP_DELETE:
             return "DELETE";
-        case Aws::Http::HttpMethod::HTTP_PUT:
+        case HttpMethod::HTTP_PUT:
             return "PUT";
-        case Aws::Http::HttpMethod::HTTP_HEAD:
+        case HttpMethod::HTTP_HEAD:
             return "HEAD";
-        case Aws::Http::HttpMethod::HTTP_PATCH:
+        case HttpMethod::HTTP_PATCH:
             return "PATCH";
         default:
             assert(false && "Encountered an unknown HttpMethod");
@@ -84,23 +100,12 @@ namespace Cesium
         return convertedHeaders;
     }
 
-    CesiumAsync::HttpHeaders HttpAssetAccessor::ConvertToCesiumHeaders(const Aws::Http::HeaderValueCollection& headers)
-    {
-        CesiumAsync::HttpHeaders convertedHeaders;
-        for (const auto& header : headers)
-        {
-            convertedHeaders.insert_or_assign(header.first.c_str(), header.second.c_str());
-        }
-
-        return convertedHeaders;
-    }
-
     std::shared_ptr<HttpAssetRequest> HttpAssetAccessor::CreateO3DEAssetRequest(
-        const Aws::Http::HttpRequest& request, Aws::Http::HttpResponse* response)
+        const HttpRequest& request, const HttpResponse* response)
     {
-        std::string method = ConvertMethodToString(request.GetMethod());
-        std::string url = request.GetURIString().c_str();
-        CesiumAsync::HttpHeaders headers = ConvertToCesiumHeaders(request.GetHeaders());
+        std::string method = ConvertMethodToString(request.m_method);
+        std::string url = request.m_url;
+        CesiumAsync::HttpHeaders headers = request.m_headers;
         std::unique_ptr<HttpAssetResponse> assetResponse;
         if (response)
         {
@@ -114,14 +119,14 @@ namespace Cesium
         return std::make_shared<HttpAssetRequest>(std::move(method), std::move(url), std::move(headers), std::move(assetResponse));
     }
 
-    std::unique_ptr<HttpAssetResponse> HttpAssetAccessor::CreateO3DEAssetResponse(Aws::Http::HttpResponse& response)
+    std::unique_ptr<HttpAssetResponse> HttpAssetAccessor::CreateO3DEAssetResponse(const HttpResponse& response)
     {
-        std::uint16_t statusCode = static_cast<std::uint16_t>(response.GetResponseCode());
-        std::string contentType = response.GetContentType().c_str();
-        CesiumAsync::HttpHeaders headers = ConvertToCesiumHeaders(response.GetHeaders());
+        std::uint16_t statusCode = static_cast<std::uint16_t>(response.m_statusCode);
+        std::string contentType = response.m_contentType;
+        CesiumAsync::HttpHeaders headers = response.m_headers;
 
         // try to decompress gzip if there are any
-        IOContent responseContent = HttpManager::GetResponseBodyContent(response);
+        IOContent responseContent = response.m_body;
         auto contentEncoding = headers.find(CONTENT_ENCODING_HEADER_KEY);
         if (contentEncoding != headers.end())
         {

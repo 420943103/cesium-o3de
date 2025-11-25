@@ -59,7 +59,7 @@ namespace Cesium
 
         AZ::Data::AssetId materialAssetId = CesiumInterface::Get()->GetCriticalAssetManager().GenerateRandomAssetId();
         AZ::RPI::MaterialAssetCreator materialCreator;
-        materialCreator.Begin(materialAssetId, materialTypeAsset, true);
+        materialCreator.Begin(materialAssetId, materialTypeAsset);
 
         ConfigurePbrMetallicRoughness(model, material, textureCache, materialCreator);
         ConfigureOcclusion(model, material, textureCache, materialCreator);
@@ -266,12 +266,12 @@ namespace Cesium
         }
 
         const CesiumGltf::Image* image = model.getSafe<CesiumGltf::Image>(&model.images, texture->source);
-        if (!image || image->cesium.pixelData.empty())
+        if (!image || image->pAsset->pixelData.empty())
         {
             return {};
         }
 
-        if (image->cesium.width <= 0 || image->cesium.height <= 0)
+        if (image->pAsset->width <= 0 || image->pAsset->height <= 0)
         {
             return {};
         }
@@ -286,7 +286,7 @@ namespace Cesium
 
         // Create new asset
         AZ::Data::Asset<AZ::RPI::StreamingImageAsset> newImage;
-        const CesiumGltf::ImageCesium& imageData = image->cesium;
+        const CesiumGltf::ImageAsset& imageData = *image->pAsset;
         std::uint32_t width = static_cast<std::uint32_t>(imageData.width);
         std::uint32_t height = static_cast<std::uint32_t>(imageData.height);
         if (imageData.bytesPerChannel != 1 || imageData.channels < 1)
@@ -332,12 +332,12 @@ namespace Cesium
         }
 
         const CesiumGltf::Image* image = model.getSafe<CesiumGltf::Image>(&model.images, texture->source);
-        if (!image || image->cesium.pixelData.empty())
+        if (!image || image->pAsset->pixelData.empty())
         {
             return {};
         }
 
-        if (image->cesium.width <= 0 || image->cesium.height <= 0)
+        if (image->pAsset->width <= 0 || image->pAsset->height <= 0)
         {
             return {};
         }
@@ -352,7 +352,7 @@ namespace Cesium
 
         // Create a new asset if cache doesn't have it
         AZ::Data::Asset<AZ::RPI::StreamingImageAsset> newImage;
-        const CesiumGltf::ImageCesium& imageData = image->cesium;
+        const CesiumGltf::ImageAsset& imageData = *image->pAsset;
         std::uint32_t width = static_cast<std::uint32_t>(imageData.width);
         std::uint32_t height = static_cast<std::uint32_t>(imageData.height);
         if (imageData.bytesPerChannel != 1 || imageData.channels < 3 || imageData.channels > 4)
@@ -402,12 +402,12 @@ namespace Cesium
         }
 
         const CesiumGltf::Image* image = model.getSafe<CesiumGltf::Image>(&model.images, texture->source);
-        if (!image || image->cesium.pixelData.empty())
+        if (!image || image->pAsset->pixelData.empty())
         {
             return;
         }
 
-        if (image->cesium.width <= 0 || image->cesium.height <= 0)
+        if (image->pAsset->width <= 0 || image->pAsset->height <= 0)
         {
             return;
         }
@@ -425,7 +425,7 @@ namespace Cesium
         }
 
         // Create new assets if caches are not found
-        const CesiumGltf::ImageCesium& imageData = image->cesium;
+        const CesiumGltf::ImageAsset& imageData = *image->pAsset;
         std::uint32_t width = static_cast<std::uint32_t>(imageData.width);
         std::uint32_t height = static_cast<std::uint32_t>(imageData.height);
         if (imageData.bytesPerChannel != 1 || imageData.channels < 3 || imageData.channels > 4)
@@ -466,7 +466,7 @@ namespace Cesium
         imageDesc.m_size = AZ::RHI::Size(width, height, 1);
         imageDesc.m_format = format;
 
-        AZ::RHI::ImageSubresourceLayout imageSubresourceLayout = AZ::RHI::GetImageSubresourceLayout(imageDesc, AZ::RHI::ImageSubresource{});
+        auto imageSubresourceLayout = AZ::RHI::GetImageSubresourceLayout(imageDesc, AZ::RHI::ImageSubresource{});
 
         // Create mip chain
         AZ::Data::AssetId imageMipChainAssetId = CesiumInterface::Get()->GetCriticalAssetManager().GenerateRandomAssetId();

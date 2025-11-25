@@ -301,7 +301,7 @@ namespace Cesium
             }
 
             outputValue.SetArray();
-            outputValue.Reserve(instance->length(), context.GetJsonAllocator());
+            outputValue.Reserve(static_cast<rapidjson_ly::SizeType>(instance->length()), context.GetJsonAllocator());
             for (typename VecType::length_type i = 0; i < instance->length(); ++i)
             {
                 outputValue.PushBack((*instance)[i], context.GetJsonAllocator());
@@ -398,7 +398,7 @@ namespace Cesium
             }
 
             outputValue.SetArray();
-            outputValue.Reserve(instance->length(), context.GetJsonAllocator());
+            outputValue.Reserve(static_cast<rapidjson_ly::SizeType>(instance->length()), context.GetJsonAllocator());
             auto columnSerializer = context.GetRegistrationContext()->GetSerializerForType(azrtti_typeid<VecType>());
             for (typename MatType::length_type i = 0; i < instance->length(); ++i)
             {

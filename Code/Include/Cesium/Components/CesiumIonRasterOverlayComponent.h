@@ -39,7 +39,7 @@ namespace Cesium
         void LoadRasterOverlay(const CesiumIonRasterOverlaySource& source);
 
     private:
-        std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> LoadRasterOverlayImpl() override;
+        std::unique_ptr<CesiumRasterOverlays::RasterOverlay> LoadRasterOverlayImpl() override;
 
         CesiumIonRasterOverlaySource m_source;
     };

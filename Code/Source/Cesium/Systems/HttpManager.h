@@ -6,7 +6,8 @@
 #include <CesiumAsync/AsyncSystem.h>
 #include <CesiumAsync/Future.h>
 #include <CesiumAsync/HttpHeaders.h>
-#include <aws/core/http/HttpResponse.h>
+#include <string>
+#include <memory>
 
 namespace AZ
 {
@@ -15,32 +16,34 @@ namespace AZ
     class Job;
 } // namespace AZ
 
-namespace Aws
-{
-    namespace Http
-    {
-        class HttpClient;
-    }
-} // namespace Aws
-
 namespace Cesium
 {
+    enum class HttpMethod
+    {
+        HTTP_GET,
+        HTTP_POST,
+        HTTP_PUT,
+        HTTP_DELETE,
+        HTTP_HEAD,
+        HTTP_PATCH
+    };
+
     struct HttpRequestParameter final
     {
-        HttpRequestParameter(AZStd::string&& url, Aws::Http::HttpMethod method)
+        HttpRequestParameter(AZStd::string&& url, HttpMethod method)
             : m_url{ std::move(url) }
             , m_method{ method }
         {
         }
 
-        HttpRequestParameter(AZStd::string&& url, Aws::Http::HttpMethod method, CesiumAsync::HttpHeaders&& headers)
+        HttpRequestParameter(AZStd::string&& url, HttpMethod method, CesiumAsync::HttpHeaders&& headers)
             : m_url{ std::move(url) }
             , m_method{ method }
             , m_headers{ std::move(headers) }
         {
         }
 
-        HttpRequestParameter(AZStd::string&& url, Aws::Http::HttpMethod method, CesiumAsync::HttpHeaders&& headers, AZStd::string&& body)
+        HttpRequestParameter(AZStd::string&& url, HttpMethod method, CesiumAsync::HttpHeaders&& headers, AZStd::string&& body)
             : m_url{ std::move(url) }
             , m_method{ method }
             , m_headers{ std::move(headers) }
@@ -49,18 +52,31 @@ namespace Cesium
         }
 
         AZStd::string m_url;
-
-        Aws::Http::HttpMethod m_method;
-
+        HttpMethod m_method;
         CesiumAsync::HttpHeaders m_headers;
-
         AZStd::string m_body;
+    };
+
+    struct HttpResponse final
+    {
+        int m_statusCode = 0;
+        CesiumAsync::HttpHeaders m_headers;
+        IOContent m_body;
+        std::string m_contentType;
+    };
+
+    struct HttpRequest final
+    {
+        std::string m_url;
+        HttpMethod m_method;
+        CesiumAsync::HttpHeaders m_headers;
+        std::string m_body;
     };
 
     struct HttpResult final
     {
-        std::shared_ptr<Aws::Http::HttpRequest> m_request;
-        std::shared_ptr<Aws::Http::HttpResponse> m_response;
+        std::shared_ptr<HttpRequest> m_request;
+        std::shared_ptr<HttpResponse> m_response;
     };
 
     class HttpManager final : public GenericIOManager
@@ -88,11 +104,14 @@ namespace Cesium
         CesiumAsync::Future<IOContent> GetFileContentAsync(
             const CesiumAsync::AsyncSystem& asyncSystem, IORequestParameter&& request) override;
 
-        static IOContent GetResponseBodyContent(Aws::Http::HttpResponse& response);
+        static IOContent GetResponseBodyContent(const HttpResponse& response);
 
     private:
         AZStd::unique_ptr<AZ::JobManager> m_ioJobManager;
         AZStd::unique_ptr<AZ::JobContext> m_ioJobContext;
-        std::shared_ptr<Aws::Http::HttpClient> m_awsHttpClient;
+        
+        // Internal HTTP client implementation
+        struct HttpClientImpl;
+        std::unique_ptr<HttpClientImpl> m_httpClient;
     };
 } // namespace Cesium

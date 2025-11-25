@@ -3,8 +3,8 @@
 #include <AzCore/std/optional.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/RTTI/BehaviorContext.h>
-#include <Cesium3DTilesSelection/RasterOverlay.h>
-#include <Cesium3DTilesSelection/IonRasterOverlay.h>
+#include <CesiumRasterOverlays/RasterOverlay.h>
+#include <CesiumRasterOverlays/IonRasterOverlay.h>
 #include <memory>
 
 namespace Cesium
@@ -95,9 +95,9 @@ namespace Cesium
         RasterOverlayComponent::LoadRasterOverlay();
     }
 
-    std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> CesiumIonRasterOverlayComponent::LoadRasterOverlayImpl()
+    std::unique_ptr<CesiumRasterOverlays::RasterOverlay> CesiumIonRasterOverlayComponent::LoadRasterOverlayImpl()
     {
-        return std::make_unique<Cesium3DTilesSelection::IonRasterOverlay>(
+        return std::make_unique<CesiumRasterOverlays::IonRasterOverlay>(
             "CesiumIonRasterOverlay", m_source.m_ionAssetId, m_source.m_ionToken.c_str());
     }
 } // namespace Cesium

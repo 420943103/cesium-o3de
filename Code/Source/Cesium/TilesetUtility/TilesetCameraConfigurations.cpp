@@ -77,6 +77,6 @@ namespace Cesium
         double aspect = viewportSize.x / viewportSize.y;
         double verticalFov = 2.0 * glm::atan(1.0 / projectMatrix.GetElement(1, 1));
         double horizontalFov = 2.0 * glm::atan(glm::tan(verticalFov * 0.5) * aspect);
-        return Cesium3DTilesSelection::ViewState::create(position, direction, up, viewportSize, horizontalFov, verticalFov);
+        return Cesium3DTilesSelection::ViewState::ViewState(position, direction, up, viewportSize, horizontalFov, verticalFov);
     }
 } // namespace Cesium

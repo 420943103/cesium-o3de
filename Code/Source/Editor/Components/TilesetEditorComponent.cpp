@@ -19,7 +19,7 @@
 #include <AzToolsFramework/UI/PropertyEditor/PropertyEditorAPI.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 
 namespace Cesium
 {
@@ -257,7 +257,7 @@ namespace Cesium
         AZ::TransformNotificationBus::Handler::BusDisconnect();
 
         const auto& volume = m_tilesetComponent->GetRootBoundingVolumeInECEF();
-        glm::dmat4 enu = CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(TilesetBoundingVolumeUtil::GetCenter(volume));
+        glm::dmat4 enu = CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(TilesetBoundingVolumeUtil::GetCenter(volume));
         glm::dmat4 relativeTransform = absToRelWorld * m_transform * enu;
         glm::dvec3 relativeCenter = glm::dvec3(relativeTransform[3]);
         glm::dquat relativeQuat = glm::dquat(relativeTransform);
@@ -286,7 +286,7 @@ namespace Cesium
 
         const auto& volume = m_tilesetComponent->GetRootBoundingVolumeInECEF();
         glm::dmat4 inverseENU =
-            glm::inverse(CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(TilesetBoundingVolumeUtil::GetCenter(volume)));
+            glm::inverse(CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(TilesetBoundingVolumeUtil::GetCenter(volume)));
         m_transform = relToAbsWorld * transform * inverseENU;
         m_tilesetComponent->ApplyTransformToRoot(m_transform);
 

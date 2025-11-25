@@ -6,15 +6,15 @@
  *
  */
 
-#include <scenesrg.srgi>
+#include <scenesrg_all.srgi>
 #include "GltfStandardPBR_Common.azsli"
 #include <Atom/Features/PBR/DefaultObjectSrg.azsli>
 #include <Atom/Features/ParallaxMapping.azsli>
 #include <Atom/Features/MatrixUtility.azsli>
 #include <Atom/Features/Shadow/Shadow.azsli>
 
-#include "./MaterialInputs/AlphaInput.azsli"
-#include "./MaterialInputs/ParallaxInput.azsli"
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/AlphaInput.azsli>
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/ParallaxInput.azsli>
 
 struct VertexInput
 {
@@ -43,7 +43,7 @@ struct VertexOutput
 
 VertexOutput MainVS(VertexInput IN)
 {
-    const float4x4 objectToWorld = ObjectSrg::GetWorldMatrix();
+    const float4x4 objectToWorld = SceneSrg::GetObjectToWorldMatrix(ObjectSrg::m_objectId);
     VertexOutput OUT;
     
     const float3 worldPosition = mul(objectToWorld, float4(IN.m_position, 1.0)).xyz;
@@ -56,7 +56,7 @@ VertexOutput MainVS(VertexInput IN)
     {
         OUT.m_worldPosition = worldPosition.xyz;
 
-        float3x3 objectToWorldIT = ObjectSrg::GetWorldMatrixInverseTranspose();
+        float3x3 objectToWorldIT = SceneSrg::GetObjectToWorldInverseTransposeMatrix(ObjectSrg::m_objectId);
         ConstructTBN(IN.m_normal, IN.m_tangent, objectToWorld, objectToWorldIT, OUT.m_normal, OUT.m_tangent, OUT.m_bitangent);
     }
 
@@ -83,8 +83,9 @@ PSDepthOutput MainPS(VertexOutput IN, bool isFrontFace : SV_IsFrontFace)
         float3x3 uvMatrix = MaterialSrg::m_parallaxUvIndex == 0 ? MaterialSrg::m_uvMatrix : CreateIdentity3x3();
         float3x3 uvMatrixInverse = MaterialSrg::m_parallaxUvIndex == 0 ? MaterialSrg::m_uvMatrixInverse : CreateIdentity3x3();
 
-        GetParallaxInput(IN.m_normal, tangents[MaterialSrg::m_parallaxUvIndex], bitangents[MaterialSrg::m_parallaxUvIndex], MaterialSrg::m_heightmapScale, MaterialSrg::m_heightmapOffset,
-                         ObjectSrg::GetWorldMatrix(), uvMatrix, uvMatrixInverse,
+        MaterialParameters params = (MaterialParameters)0;
+        GetParallaxInput(params, MaterialSrg::m_heightmap, MaterialSrg::m_sampler, IN.m_normal, tangents[MaterialSrg::m_parallaxUvIndex], bitangents[MaterialSrg::m_parallaxUvIndex], MaterialSrg::m_heightmapScale, MaterialSrg::m_heightmapOffset,
+                         SceneSrg::GetObjectToWorldMatrix(ObjectSrg::m_objectId), uvMatrix, uvMatrixInverse,
                          IN.m_uv[MaterialSrg::m_parallaxUvIndex], IN.m_worldPosition, OUT.m_depth);
 
         //OUT.m_depth += PdoShadowMapBias;

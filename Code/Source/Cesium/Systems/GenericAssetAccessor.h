@@ -33,9 +33,9 @@ namespace Cesium
             return GENERIC_RESPONSE_HEADERS;
         }
 
-        gsl::span<const std::byte> data() const override
+        std::span<const std::byte> data() const override
         {
-            return gsl::span<const std::byte>(m_ioContent.data(), m_ioContent.size());
+            return std::span<const std::byte>(m_ioContent.data(), m_ioContent.size());
         }
 
     private:
@@ -91,14 +91,15 @@ namespace Cesium
     public:
         GenericAssetAccessor(GenericIOManager* ioManager, const std::string& contentType);
 
-        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> requestAsset(
+        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> get(
             const CesiumAsync::AsyncSystem& asyncSystem, const std::string& url, const std::vector<THeader>& headers = {}) override;
 
-        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> post(
+        CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> request(
             const CesiumAsync::AsyncSystem& asyncSystem,
+            const std::string& verb,
             const std::string& url,
             const std::vector<THeader>& headers = std::vector<THeader>(),
-            const gsl::span<const std::byte>& contentPayload = {}) override;
+            const std::span<const std::byte>& contentPayload = {}) override;
 
         void tick() noexcept override;
 

@@ -15,7 +15,7 @@
 #include <Atom/Features/Pipeline/Forward/ForwardPassSrg.azsli>
 
 // Pass Output
-#include <Atom/Features/Pipeline/Forward/ForwardSubsurfacePassOutput.azsli>
+#include <Atom/Features/Pipeline/Forward/ForwardPassOutput.azsli>
 
 // Utility
 #include <Atom/Features/ColorManagement/TransformColor.azsli>
@@ -26,6 +26,12 @@
 
 // Decals
 #include <Atom/Features/PBR/Decals.azsli>
+#include <Atom/Features/PBR/Lights/Lights.azsli>
+#include <Atom/Features/PBR/Lights/IblForward.azsli>
+#include <Atom/Features/Pipeline/Forward/ForwardPassDecals.azsli>
+#include <Atom/Features/Pipeline/Forward/ForwardPassDirectLighting.azsli>
+#include <Atom/Features/Pipeline/Forward/ForwardPassIbl.azsli>
+#include <Atom/Features/LightCulling/LightCullingTileIterator.azsli>
 
 
 // ---------- Material Parameters ----------
@@ -43,7 +49,7 @@ COMMON_OPTIONS_RASTER(raster1)
 // Note COMMON_OPTIONS_PARALLAX is in StandardPBR_Common.azsli because it's needed by all StandardPBR shaders.
 
 // Alpha
-#include "./MaterialInputs/AlphaInput.azsli"
+#include <Atom/Feature/Common/Assets/Shaders/Materials/MaterialInputs/AlphaInput.azsli>
 
 // ---------- Vertex Shader ----------
 
@@ -84,7 +90,7 @@ VSOutput StandardPbr_ForwardPassVS(VSInput IN)
 {
     VSOutput OUT;
 
-    float3 worldPosition = mul(ObjectSrg::GetWorldMatrix(), float4(IN.m_position, 1.0)).xyz;
+    float3 worldPosition = mul(SceneSrg::GetObjectToWorldMatrix(ObjectSrg::m_objectId), float4(IN.m_position, 1.0)).xyz;
 
     // By design, only UV0 is allowed to apply transforms.
     OUT.m_uv[0] = mul(MaterialSrg::m_uvMatrix, float3(IN.m_uv0, 1.0)).xy;
@@ -106,8 +112,8 @@ VSOutput StandardPbr_ForwardPassVS(VSInput IN)
     OUT.m_worldPosition = worldPosition;
     OUT.m_position = mul(ViewSrg::m_viewProjectionMatrix, float4(OUT.m_worldPosition, 1.0));
 
-    float4x4 objectToWorld = ObjectSrg::GetWorldMatrix();
-    float3x3 objectToWorldIT = ObjectSrg::GetWorldMatrixInverseTranspose();
+    float4x4 objectToWorld = SceneSrg::GetObjectToWorldMatrix(ObjectSrg::m_objectId);
+	float3x3 objectToWorldIT = SceneSrg::GetObjectToWorldInverseTransposeMatrix(ObjectSrg::m_objectId);
 
     ConstructTBN(IN.m_normal, IN.m_tangent, objectToWorld, objectToWorldIT, OUT.m_normal, OUT.m_tangent, OUT.m_bitangent);
 
@@ -156,8 +162,9 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
 
         float3x3 uvMatrix = MaterialSrg::m_parallaxUvIndex == 0 ? MaterialSrg::m_uvMatrix : CreateIdentity3x3();
         float3x3 uvMatrixInverse = MaterialSrg::m_parallaxUvIndex == 0 ? MaterialSrg::m_uvMatrixInverse : CreateIdentity3x3();
-        GetParallaxInput(IN.m_normal, tangents[MaterialSrg::m_parallaxUvIndex], bitangents[MaterialSrg::m_parallaxUvIndex], MaterialSrg::m_heightmapScale, MaterialSrg::m_heightmapOffset,
-                         ObjectSrg::GetWorldMatrix(), uvMatrix, uvMatrixInverse,
+        MaterialParameters params = (MaterialParameters)0;
+        GetParallaxInput(params, MaterialSrg::m_heightmap, MaterialSrg::m_sampler, IN.m_normal, tangents[MaterialSrg::m_parallaxUvIndex], bitangents[MaterialSrg::m_parallaxUvIndex], MaterialSrg::m_heightmapScale, MaterialSrg::m_heightmapOffset,
+                         SceneSrg::GetObjectToWorldMatrix(ObjectSrg::m_objectId), uvMatrix, uvMatrixInverse,
                          IN.m_uv[MaterialSrg::m_parallaxUvIndex], IN.m_worldPosition, depthNDC, IN.m_position.w, displacementIsClipped);
 
         // Adjust directional light shadow coordinates for parallax correction
@@ -186,7 +193,7 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
     float3x3 uvMatrix = MaterialSrg::m_normalMapUvIndex == 0 ? MaterialSrg::m_uvMatrix : CreateIdentity3x3(); // By design, only UV0 is allowed to apply transforms.
     surface.vertexNormal = vertexNormal;
     surface.normal = GetNormalInputWS(MaterialSrg::m_normalMap, MaterialSrg::m_sampler, normalUv, MaterialSrg::m_flipNormalX, MaterialSrg::m_flipNormalY, isFrontFace, IN.m_normal,
-                                       tangents[MaterialSrg::m_normalMapUvIndex], bitangents[MaterialSrg::m_normalMapUvIndex], uvMatrix, o_normal_useTexture, MaterialSrg::m_normalFactor);
+                                       tangents[MaterialSrg::m_normalMapUvIndex], bitangents[MaterialSrg::m_normalMapUvIndex], uvMatrix, o_normal_useTexture, MaterialSrg::m_normalFactor, float4(0.0, 0.0, 0.0, 0.0), false);
 
     // ------- Base Color -------
 
@@ -223,10 +230,17 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
     // ------- Lighting Data -------
 
     LightingData lightingData;
+    float3 viewPositions[MAX_SHADING_VIEWS];
+    viewPositions[0] = ViewSrg::m_worldPosition.xyz;
+    lightingData.Init(surface.position, surface.normal, surface.roughnessLinear, viewPositions);
 
     // Light iterator
-    lightingData.tileIterator.Init(IN.m_position, PassSrg::m_lightListRemapped, PassSrg::m_tileLightData);
-    lightingData.Init(surface.position, surface.normal, surface.roughnessLinear);
+    LightCullingTileIterator tileIterator;
+#if ENABLE_LIGHT_CULLING
+    tileIterator.Init(IN.m_position, PassSrg::m_lightListRemapped, PassSrg::m_tileLightData);
+#else
+    tileIterator.InitNoCulling();
+#endif
     
     // Directional light shadow coordinates
     //lightingData.shadowCoords = IN.m_shadowCoords;
@@ -234,7 +248,7 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
     // ------- Emissive -------
 
     float2 emissiveUv = IN.m_uv[MaterialSrg::m_emissiveMapUvIndex];
-    lightingData.emissiveLighting = GetEmissiveInput(MaterialSrg::m_emissiveMap, MaterialSrg::m_sampler, emissiveUv, MaterialSrg::m_emissiveIntensity, MaterialSrg::m_emissiveColor.rgb, o_emissiveEnabled, o_emissive_useTexture);
+    lightingData.emissiveLighting = GetEmissiveInput(MaterialSrg::m_emissiveMap, MaterialSrg::m_sampler, emissiveUv, MaterialSrg::m_emissiveIntensity, MaterialSrg::m_emissiveColor.rgb, 0.0, alpha, o_emissiveEnabled, o_emissive_useTexture);
 
     // ------- Occlusion -------
     
@@ -266,13 +280,13 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
     }
     
     // Diffuse and Specular response (used in IBL calculations)
-    lightingData.specularResponse = FresnelSchlickWithRoughness(lightingData.NdotV, surface.specularF0, surface.roughnessLinear);
+    lightingData.specularResponse = FresnelSchlickWithRoughness(lightingData.GetSpecularNdotV(0), surface.specularF0, surface.roughnessLinear);
     lightingData.diffuseResponse = 1.0 - lightingData.specularResponse;
 
     if(o_clearCoat_feature_enabled)
     {
         // Clear coat layer has fixed IOR = 1.5 and transparent => F0 = (1.5 - 1)^2 / (1.5 + 1)^2 = 0.04
-        lightingData.diffuseResponse *= 1.0 - (FresnelSchlickWithRoughness(lightingData.NdotV, float3(0.04, 0.04, 0.04), surface.clearCoat.roughness) * surface.clearCoat.factor);
+        lightingData.diffuseResponse *= 1.0 - (FresnelSchlickWithRoughness(lightingData.GetSpecularNdotV(0), float3(0.04, 0.04, 0.04), surface.clearCoat.roughness) * surface.clearCoat.factor);
     }
 
     // ------- Multiscatter -------
@@ -282,13 +296,13 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
     // ------- Lighting Calculation -------
 
     // Apply Decals
-    ApplyDecals(lightingData.tileIterator, surface);
+    ApplyDecals_ForwardPass(tileIterator, surface);
 
     // Apply Direct Lighting
-    ApplyDirectLighting(surface, lightingData, IN.m_position);
+    ApplyDirectLighting_ForwardPass(surface, lightingData, IN.m_position, tileIterator);
 
     // Apply Image Based Lighting (IBL)
-    ApplyIBL(surface, lightingData);
+    ApplyIbl_ForwardPass(surface, lightingData);
 
     // Finalize Lighting
     lightingData.FinalizeLighting();
@@ -304,7 +318,7 @@ PbrLightingOutput ForwardPassPS_Common(VSOutput IN, bool isFrontFace, out float 
         // like glass, so it becomes less transparent at grazing angles. For m_opacityAffectsSpecularFactor
         // values close to 1.0, that indicates the absence of a surface entirely, so this effect should
         // not apply.
-        float fresnelAlpha = FresnelSchlickWithRoughness(lightingData.NdotV, alpha, surface.roughnessLinear).x;
+        float fresnelAlpha = FresnelSchlickWithRoughness(lightingData.GetSpecularNdotV(0), alpha, surface.roughnessLinear).x;
         alpha = lerp(fresnelAlpha, alpha, MaterialSrg::m_opacityAffectsSpecularFactor);
     }
 
@@ -369,15 +383,14 @@ ForwardPassOutputWithDepth StandardPbr_ForwardPassPS(VSOutput IN, bool isFrontFa
     //OUT.m_color.a = lightingOutput.m_diffuseColor.a;
     OUT.m_diffuseColor = lightingOutput.m_diffuseColor;
     OUT.m_specularColor = lightingOutput.m_specularColor;
-    OUT.m_depth = depth;
 #else
     OUT.m_diffuseColor = lightingOutput.m_diffuseColor;
     OUT.m_specularColor = lightingOutput.m_specularColor;
     OUT.m_specularF0 = lightingOutput.m_specularF0;
     OUT.m_albedo = lightingOutput.m_albedo;
     OUT.m_normal = lightingOutput.m_normal;
-    OUT.m_depth = depth;
 #endif
+    OUT.m_depth = depth;
     return OUT;
 }
 

@@ -48,6 +48,13 @@ namespace Cesium
         return this->operator()(s2Volume.computeBoundingRegion());
     }
 
+    TilesetBoundingVolume BoundingVolumeConverter::operator()(const CesiumGeometry::BoundingCylinderRegion& cylinder)
+    {
+        // Convert cylinder region to oriented bounding box
+        CesiumGeometry::OrientedBoundingBox obb = cylinder.toOrientedBoundingBox();
+        return this->operator()(obb);
+    }
+
     AZ::Aabb BoundingVolumeToAABB::operator()(const CesiumGeometry::BoundingSphere& sphere)
     {
         glm::dvec3 center = glm::dvec3(m_transform * glm::dvec4(sphere.getCenter(), 1.0));
@@ -105,6 +112,13 @@ namespace Cesium
         return this->operator()(s2Volume.computeBoundingRegion());
     }
 
+    AZ::Aabb BoundingVolumeToAABB::operator()(const CesiumGeometry::BoundingCylinderRegion& cylinder)
+    {
+        // Convert cylinder region to oriented bounding box first
+        CesiumGeometry::OrientedBoundingBox obb = cylinder.toOrientedBoundingBox();
+        return this->operator()(obb);
+    }
+
     TilesetBoundingVolume BoundingVolumeTransform::operator()(const CesiumGeometry::BoundingSphere& sphere)
     {
         glm::dvec3 center = glm::dvec3(m_transform * glm::dvec4(sphere.getCenter(), 1.0));
@@ -139,5 +153,12 @@ namespace Cesium
     TilesetBoundingVolume BoundingVolumeTransform::operator()(const CesiumGeospatial::S2CellBoundingVolume& s2Volume)
     {
         return this->operator()(s2Volume.computeBoundingRegion());
+    }
+
+    TilesetBoundingVolume BoundingVolumeTransform::operator()(const CesiumGeometry::BoundingCylinderRegion& cylinder)
+    {
+        // Convert cylinder region to oriented bounding box
+        CesiumGeometry::OrientedBoundingBox obb = cylinder.toOrientedBoundingBox();
+        return this->operator()(obb);
     }
 } // namespace Cesium

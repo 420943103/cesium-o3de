@@ -10,7 +10,7 @@ namespace AZ
     class ReflectContext;
 }
 
-namespace Cesium3DTilesSelection
+namespace CesiumRasterOverlays
 {
     class RasterOverlay;
 }
@@ -57,7 +57,7 @@ namespace Cesium
         void LoadRasterOverlay();
 
     private:
-        virtual std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> LoadRasterOverlayImpl();
+        virtual std::unique_ptr<CesiumRasterOverlays::RasterOverlay> LoadRasterOverlayImpl();
 
         struct Impl;
         AZStd::unique_ptr<Impl> m_impl;

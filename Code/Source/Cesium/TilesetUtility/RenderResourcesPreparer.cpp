@@ -90,7 +90,7 @@ namespace Cesium
         }
     }
 
-    bool RenderResourcesPreparer::AddRasterLayer(const Cesium3DTilesSelection::RasterOverlay* rasterOverlay)
+    bool RenderResourcesPreparer::AddRasterLayer(const CesiumRasterOverlays::RasterOverlay* rasterOverlay)
     {
         if (m_freeRasterLayers.empty())
         {
@@ -106,7 +106,7 @@ namespace Cesium
         return true;
     }
 
-    void RenderResourcesPreparer::RemoveRasterLayer(const Cesium3DTilesSelection::RasterOverlay* rasterOverlay)
+    void RenderResourcesPreparer::RemoveRasterLayer(const CesiumRasterOverlays::RasterOverlay* rasterOverlay)
     {
         auto layerIt = m_rasterOverlayLayers.find(rasterOverlay);
         if (layerIt == m_rasterOverlayLayers.end())
@@ -118,21 +118,20 @@ namespace Cesium
         m_freeRasterLayers.emplace_back(layerIt->second);
     }
 
-    void* RenderResourcesPreparer::prepareInLoadThread(const CesiumGltf::Model& model, const glm::dmat4& transform)
+    CesiumAsync::Future<Cesium3DTilesSelection::TileLoadResultAndRenderResources> RenderResourcesPreparer::prepareInLoadThread(
+        const CesiumAsync::AsyncSystem& asyncSystem,
+        Cesium3DTilesSelection::TileLoadResult&& tileLoadResult,
+        const glm::dmat4& transform,
+        const std::any& rendererOptions)
     {
-        // set option for model loaders. Especially RTC
-        GltfModelBuilderOption option{ transform };
-        AZStd::optional<glm::dvec3> rtc = GetRTCFromGltf(model);
-        if (rtc)
+        CesiumGltf::Model* pModel = std::get_if<CesiumGltf::Model>(&tileLoadResult.contentKind);
+        if (!pModel)
         {
-            option.m_transform = glm::translate(transform, rtc.value());
+            return asyncSystem.createResolvedFuture(
+                Cesium3DTilesSelection::TileLoadResultAndRenderResources{ std::move(tileLoadResult), nullptr });
         }
-
-        // build model
-        AZStd::unique_ptr<GltfLoadModel> loadModel = AZStd::make_unique<GltfLoadModel>();
-        GltfModelBuilder builder(AZStd::make_unique<GltfRasterMaterialBuilder>());
-        builder.Create(model, option, *loadModel);
-        return loadModel.release();
+        return asyncSystem.createResolvedFuture(
+            Cesium3DTilesSelection::TileLoadResultAndRenderResources{ std::move(tileLoadResult)});
     }
 
     void* RenderResourcesPreparer::prepareInMainThread([[maybe_unused]] Cesium3DTilesSelection::Tile& tile, void* pLoadThreadResult)
@@ -169,7 +168,7 @@ namespace Cesium
         }
     }
 
-    void* RenderResourcesPreparer::prepareRasterInLoadThread(const CesiumGltf::ImageCesium& image)
+    void* RenderResourcesPreparer::prepareRasterInLoadThread(CesiumGltf::ImageAsset& image, const std::any& rendererOptions)
     {
         if (!image.pixelData.empty() && image.width != 0 && image.height != 0)
         {
@@ -180,7 +179,7 @@ namespace Cesium
             imageDesc.m_size = AZ::RHI::Size(image.width, image.height, 1);
             imageDesc.m_format = AZ::RHI::Format::R8G8B8A8_UNORM_SRGB;
 
-            AZ::RHI::ImageSubresourceLayout imageSubresourceLayout =
+            auto imageSubresourceLayout =
                 AZ::RHI::GetImageSubresourceLayout(imageDesc, AZ::RHI::ImageSubresource{});
 
             // Create mip chain
@@ -213,7 +212,7 @@ namespace Cesium
     }
 
     void* RenderResourcesPreparer::prepareRasterInMainThread(
-        [[maybe_unused]] const Cesium3DTilesSelection::RasterOverlayTile& rasterTile, void* pLoadThreadResult)
+        [[maybe_unused]] CesiumRasterOverlays::RasterOverlayTile& rasterTile, void* pLoadThreadResult)
     {
         if (pLoadThreadResult)
         {
@@ -226,7 +225,7 @@ namespace Cesium
     }
 
     void RenderResourcesPreparer::freeRaster(
-        [[maybe_unused]] const Cesium3DTilesSelection::RasterOverlayTile& rasterTile,
+        [[maybe_unused]] const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
         void* pLoadThreadResult,
         void* pMainThreadResult) noexcept
     {
@@ -246,14 +245,14 @@ namespace Cesium
     void RenderResourcesPreparer::attachRasterInMainThread(
         const Cesium3DTilesSelection::Tile& tile,
         std::int32_t overlayTextureCoordinateID,
-        const Cesium3DTilesSelection::RasterOverlayTile& rasterTile,
+        const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
         void* mainThreadRasterResources,
         const glm::dvec2& translation,
         const glm::dvec2& scale)
     {
-        if (tile.getState() == Cesium3DTilesSelection::Tile::LoadState::Done)
+        if (tile.getState() == Cesium3DTilesSelection::TileLoadState::Done)
         {
-            void* tileRenderResource = tile.getRendererResources();
+            void* tileRenderResource = tile.getContent().getRenderContent()->getRenderResources();
             if (tileRenderResource && mainThreadRasterResources)
             {
                 // find the layer of the raster
@@ -314,12 +313,12 @@ namespace Cesium
     void RenderResourcesPreparer::detachRasterInMainThread(
         const Cesium3DTilesSelection::Tile& tile,
         [[maybe_unused]] std::int32_t overlayTextureCoordinateID,
-        const Cesium3DTilesSelection::RasterOverlayTile& rasterTile,
+        const CesiumRasterOverlays::RasterOverlayTile& rasterTile,
         void* mainThreadRasterResources) noexcept
     {
-        if (tile.getState() == Cesium3DTilesSelection::Tile::LoadState::Done)
+        if (tile.getState() == Cesium3DTilesSelection::TileLoadState::Done)
         {
-            void* tileRenderResource = tile.getRendererResources();
+            void* tileRenderResource = tile.getContent().getRenderContent()->getRenderResources();
             if (tileRenderResource && mainThreadRasterResources)
             {
                 // find the layer of the raster

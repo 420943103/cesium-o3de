@@ -26,12 +26,12 @@ TEST_F(HttpManagerTest, AddValidRequest)
     CesiumAsync::AsyncSystem asyncSystem{ nullptr };
     Cesium::HttpManager httpManager;
 
-    Cesium::HttpRequestParameter parameter("https://httpbin.org/ip", Aws::Http::HttpMethod::HTTP_GET);
+    Cesium::HttpRequestParameter parameter("https://httpbin.org/ip", Cesium::HttpMethod::HTTP_GET);
     auto completedRequestFuture = httpManager.AddRequest(asyncSystem, std::move(parameter));
     auto completedRequest = completedRequestFuture.wait();
 
-    ASSERT_EQ(completedRequest.m_response->GetResponseCode(), Aws::Http::HttpResponseCode::OK);
-    ASSERT_EQ(completedRequest.m_request->GetMethod(), Aws::Http::HttpMethod::HTTP_GET);
+    ASSERT_EQ(completedRequest.m_response->m_statusCode, 200);
+    ASSERT_EQ(completedRequest.m_request->m_method, Cesium::HttpMethod::HTTP_GET);
 }
 
 TEST_F(HttpManagerTest, GetParentPath)

@@ -18,6 +18,14 @@ o3de_pal_dir(pal_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/${PAL_PLATFORM_NAME} "${
 # Now that we have the platform abstraction layer (PAL) folder for this folder, thats where we will find the
 # traits for this platform. Traits for a platform are defines for things like whether or not something in this gem
 # is supported by this platform.
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wno-error)
+elseif (MSVC)
+    add_compile_options(/WX-)
+    add_compile_options(/utf-8)
+endif()
+
 include(${pal_dir}/PAL_${PAL_PLATFORM_NAME_LOWERCASE}.cmake)
 
 # Add CesiumNative as a third party
@@ -41,16 +49,14 @@ ly_add_target(
             Source
     BUILD_DEPENDENCIES
         PUBLIC
-            3rdParty::AWSNativeSDK::Core
             3rdParty::CesiumNative
             3rdParty::mikkelsen
             3rdParty::zlib
             AZ::AzCore
             AZ::AzFramework
-            AZ::AWSNativeSDKInit
             Legacy::CryCommon
             Gem::Atom_RPI.Public
-            Gem::Atom_Feature_Common.Static
+            Gem::Atom_Feature_Common
             Gem::LyShine.Static
     COMPILE_DEFINITIONS
         PUBLIC
@@ -58,8 +64,12 @@ ly_add_target(
             LIBASYNC_STATIC
             TIDY_STATIC
             #GLM_FORCE_XYZW_ONLY # Disable .rgba and .stpq to make it easier to view values from debugger
-            #GLM_FORCE_EXPLICIT_CTOR # Disallow implicit conversions between dvec3 <-> dvec4, dvec3 <-> fvec3, etc
+            GLM_FORCE_EXPLICIT_CTOR # Disallow implicit conversions between dvec3 <-> dvec4, dvec3 <-> fvec3, etc
             GLM_FORCE_SIZE_T_LENGTH # Make vec.length() and vec[idx] use size_t instead of int
+            GLM_ENABLE_EXPERIMENTAL
+    TARGET_PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
 )
 
 # Here add Cesium target, it depends on the Cesium.Static
@@ -77,6 +87,9 @@ ly_add_target(
     BUILD_DEPENDENCIES
         PRIVATE
             Gem::Cesium.Static
+    TARGET_PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
 )
 
 # By default, we will specify that the above target Cesium would be used by
@@ -107,6 +120,9 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
                 Gem::Cesium.Static
                 # 3rdParty::Qt::Core
                 # 3rdParty::Qt::Widgets
+        TARGET_PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
     )
 
     ly_add_target(
@@ -126,6 +142,9 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
             PUBLIC
                 # 3rdParty::Qt::Core
                 Gem::Cesium.Editor.Static
+        TARGET_PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
     )
 
     # By default, we will specify that the above target Cesium would be used by

@@ -15,7 +15,7 @@
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/std/smart_ptr/make_shared.h>
 #include <AzCore/std/smart_ptr/shared_ptr.h>
-#include <Cesium3DTilesSelection/registerAllTileContentTypes.h>
+#include <Cesium3DTilesContent/registerAllTileContentTypes.h>
 
 namespace Cesium
 {
@@ -77,7 +77,7 @@ namespace Cesium
     CesiumSystemComponent::CesiumSystemComponent()
     {
         // initialize Cesium Native
-        Cesium3DTilesSelection::registerAllTileContentTypes();
+        Cesium3DTilesContent::registerAllTileContentTypes();
 
         m_cesiumSystem = AZStd::make_unique<CesiumSystem>();
         if (CesiumInterface::Get() == nullptr)

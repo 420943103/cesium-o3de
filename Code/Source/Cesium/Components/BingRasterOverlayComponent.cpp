@@ -1,8 +1,8 @@
 #include <Cesium/Components/BingRasterOverlayComponent.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/RTTI/BehaviorContext.h>
-#include <Cesium3DTilesSelection/RasterOverlay.h>
-#include <Cesium3DTilesSelection/BingMapsRasterOverlay.h>
+#include <CesiumRasterOverlays/RasterOverlay.h>
+#include <CesiumRasterOverlays/BingMapsRasterOverlay.h>
 
 namespace Cesium
 {
@@ -123,9 +123,9 @@ namespace Cesium
         RasterOverlayComponent::LoadRasterOverlay();
     }
 
-    std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> BingRasterOverlayComponent::LoadRasterOverlayImpl()
+    std::unique_ptr<CesiumRasterOverlays::RasterOverlay> BingRasterOverlayComponent::LoadRasterOverlayImpl()
     {
-        return std::make_unique<Cesium3DTilesSelection::BingMapsRasterOverlay>(
+        return std::make_unique<CesiumRasterOverlays::BingMapsRasterOverlay>(
             "BingRasterOverlay", m_source.m_url.c_str(), m_source.m_key.c_str(), BingMapsStyleToString(m_source.m_bingMapStyle),
             m_source.m_culture.c_str());
     }

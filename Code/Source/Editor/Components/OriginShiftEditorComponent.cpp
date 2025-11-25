@@ -11,11 +11,12 @@
 #include <Cesium/Math/MathReflect.h>
 #include <AzToolsFramework/API/ToolsApplicationAPI.h>
 #include <AtomToolsFramework/Viewport/ModularViewportCameraControllerRequestBus.h>
+#include <AzToolsFramework/UI/PropertyEditor/PropertyEditorAPI.h>
 #include <Atom/RPI.Public/ViewportContext.h>
 #include <Atom/RPI.Public/ViewportContextBus.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 
 namespace Cesium
 {
@@ -68,7 +69,7 @@ namespace Cesium
         m_onOriginChangeHandler = ECEFPositionChangeEvent::Handler(
             [this](glm::dvec3 position)
             {
-                SetOriginAndRotation(position, glm::dmat3(glm::inverse(CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(position))));
+                SetOriginAndRotation(position, glm::dmat3(glm::inverse(CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(position))));
             });
     }
 
@@ -161,8 +162,7 @@ namespace Cesium
                 AtomToolsFramework::ModularViewportCameraControllerRequestBus::Event(
                     viewportContextPtr->GetId(),
                     &AtomToolsFramework::ModularViewportCameraControllerRequestBus::Events::InterpolateToTransform,
-                    AZ::Transform::CreateIdentity());
-            });
+                    AZ::Transform::CreateIdentity(),1.0);            });
     }
 
     void OriginShiftEditorComponent::UpdateTransform(const glm::dvec3& position)

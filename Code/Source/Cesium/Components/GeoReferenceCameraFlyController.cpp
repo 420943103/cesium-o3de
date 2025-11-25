@@ -19,7 +19,7 @@
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Component/TransformBus.h>
 #include <AzCore/RTTI/BehaviorContext.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -136,7 +136,7 @@ namespace Cesium
         const glm::dvec3& location, float pitchInRadians, float yawInRadians)
     {
         glm::dvec3 direction = glm::dvec3(
-            CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(location) *
+            CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(location) *
             (glm::dquat(glm::dvec3(pitchInRadians, 0.0, yawInRadians)) * glm::dvec4(0.0, 1.0, 0.0, 0.0)));
         direction = glm::normalize(direction);
         FlyToECEFLocationImpl(location, direction, nullptr, nullptr);
@@ -233,7 +233,7 @@ namespace Cesium
             OriginShiftRequestBus::BroadcastResult(absToRelWorld, &OriginShiftRequestBus::Events::GetAbsToRelWorld);
             OriginShiftRequestBus::BroadcastResult(relToAbsWorld, &OriginShiftRequestBus::Events::GetRelToAbsWorld);
             glm::dvec4 currentPosition = relToAbsWorld * MathHelper::ToDVec4(relativeCameraTransform.GetTranslation(), 1.0);
-            glm::dmat4 enu = CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(glm::dvec3(currentPosition)) *
+            glm::dmat4 enu = CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(glm::dvec3(currentPosition)) *
                 glm::dmat4(glm::dquat(glm::dvec3(m_cameraPitch, 0.0, m_cameraHead)));
             glm::dmat4 totalRotation = absToRelWorld * enu;
             glm::dquat totalRotationQuat{ totalRotation };
@@ -246,10 +246,10 @@ namespace Cesium
             glm::dvec3 newPosition = MathHelper::ToDVec3(relativeCameraTransform.GetTranslation()) + move;
 
             // reset camera pitch and head
-            if (m_cameraPitch > -CesiumUtility::Math::PI_OVER_TWO && m_cameraPitch < CesiumUtility::Math::PI_OVER_TWO)
+            if (m_cameraPitch > -CesiumUtility::Math::PiOverTwo && m_cameraPitch < CesiumUtility::Math::PiOverTwo)
             {
                 glm::dvec3 absNewPosition = glm::dvec3(relToAbsWorld * glm::dvec4(newPosition, 1.0));
-                glm::dmat4 newEnu = CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(absNewPosition);
+                glm::dmat4 newEnu = CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(absNewPosition);
                 const glm::dvec3 cameraDir = glm::dvec3(glm::inverse(newEnu) * relToAbsWorld * totalRotation[1]);
                 glm::dvec3 pitchHeadRoll = MathHelper::CalculatePitchRollHead(cameraDir);
                 m_cameraPitch = pitchHeadRoll.x;
@@ -305,7 +305,7 @@ namespace Cesium
             else if (m_cameraRotateUpdate && inputChannelId == AzFramework::InputDeviceMouse::Movement::Y)
             {
                 m_cameraPitch += glm::radians(-inputValue / 360.0 * m_mouseSensitivity);
-                m_cameraPitch = glm::clamp(m_cameraPitch, -CesiumUtility::Math::PI_OVER_TWO, CesiumUtility::Math::PI_OVER_TWO);
+                m_cameraPitch = glm::clamp(m_cameraPitch, -CesiumUtility::Math::PiOverTwo, CesiumUtility::Math::PiOverTwo);
             }
             else if (inputChannelId == AzFramework::InputDeviceMouse::Button::Right)
             {
@@ -382,7 +382,7 @@ namespace Cesium
             glm::dmat4 relToAbsWorld{ 1.0 };
             OriginShiftRequestBus::BroadcastResult(relToAbsWorld, &OriginShiftRequestBus::Events::GetRelToAbsWorld);
             const glm::dvec3 cameraDir = glm::dvec3(
-                glm::inverse(CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(ecefCurrentPosition)) * relToAbsWorld *
+                glm::inverse(CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(ecefCurrentPosition)) * relToAbsWorld *
                 MathHelper::ToDVec4(worldTM.GetBasisY(), 0.0));
             glm::dvec3 pitchHeadRoll = MathHelper::CalculatePitchRollHead(cameraDir);
             m_cameraPitch = pitchHeadRoll.x;

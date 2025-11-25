@@ -50,9 +50,9 @@ namespace Cesium
 
         const TilesetRenderConfiguration& GetRenderConfiguration() const override;
 
-        AZ::Aabb GetWorldBounds() override;
+        AZ::Aabb GetWorldBounds() const override;
 
-        AZ::Aabb GetLocalBounds() override;
+        AZ::Aabb GetLocalBounds() const override;
 
         TilesetBoundingVolume GetRootBoundingVolumeInECEF() const override;
 
@@ -73,6 +73,8 @@ namespace Cesium
         void Activate() override;
 
         void Deactivate() override;
+
+        void SetEntityVisibility(const AZ::EntityId& entityId, bool visible);
 
         using AZ::Component::SetEntity;
 

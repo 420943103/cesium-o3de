@@ -35,7 +35,7 @@ namespace Cesium
     {
     }
 
-    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> GenericAssetAccessor::requestAsset(
+    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> GenericAssetAccessor::get(
         const CesiumAsync::AsyncSystem& asyncSystem, const std::string& url, [[maybe_unused]] const std::vector<THeader>& headers)
     {
         // Hack: We need to add prefix in the RequestAssetHandler above, so that Cesium Native can compose absolute url from base url and
@@ -51,11 +51,12 @@ namespace Cesium
             .thenImmediately(RequestAssetHandler{ m_contentType, url, ConvertToCesiumHeaders(headers) });
     }
 
-    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> GenericAssetAccessor::post(
+    CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> GenericAssetAccessor::request(
         [[maybe_unused]] const CesiumAsync::AsyncSystem& asyncSystem,
+        [[maybe_unused]] const std::string& verb,
         [[maybe_unused]] const std::string& url,
         [[maybe_unused]] const std::vector<THeader>& headers,
-        [[maybe_unused]] const gsl::span<const std::byte>& contentPayload)
+        [[maybe_unused]] const std::span<const std::byte>& contentPayload)
     {
         return asyncSystem.createResolvedFuture<std::shared_ptr<CesiumAsync::IAssetRequest>>(nullptr);
     }

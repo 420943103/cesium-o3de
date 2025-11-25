@@ -12,7 +12,7 @@
 #include <Cesium/Math/MathHelper.h>
 #include <AzCore/Component/TransformBus.h>
 #include <AzCore/Serialization/SerializeContext.h>
-#include <CesiumGeospatial/Transforms.h>
+#include <CesiumGeospatial/GlobeTransforms.h>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -83,7 +83,7 @@ namespace Cesium
 
     void GeoreferenceAnchorComponent::OnOriginShifting(const glm::dmat4& absToRelWorld)
     {
-        glm::dmat4 enu = absToRelWorld * CesiumGeospatial::Transforms::eastNorthUpToFixedFrame(m_position);
+        glm::dmat4 enu = absToRelWorld * CesiumGeospatial::GlobeTransforms::eastNorthUpToFixedFrame(m_position);
         glm::dquat enuRotation = glm::dquat(enu);
         glm::dvec3 shift = glm::dvec3(enu[3]);
         AZ::Vector3 azTranslation = AZ::Vector3(static_cast<float>(shift.x), static_cast<float>(shift.y), static_cast<float>(shift.z));

@@ -99,6 +99,8 @@ set(FILES
     Include/Cesium/Components/BingRasterOverlayComponent.h
     Source/Cesium/Components/BingRasterOverlayComponent.cpp
     Include/Cesium/Components/TMSRasterOverlayComponent.h
+    #Source/Cesium/Components/UrlTemplateRasterOverlayComponent.cpp
+    #Include/Cesium/Components/UrlTemplateRasterOverlayComponent.h
     Source/Cesium/Components/TMSRasterOverlayComponent.cpp
     Include/Cesium/Components/OriginShiftComponent.h
     Source/Cesium/Components/OriginShiftComponent.cpp

@@ -61,7 +61,7 @@ namespace Cesium
         void LoadRasterOverlay(const BingRasterOverlaySource& source);
 
     private:
-        std::unique_ptr<Cesium3DTilesSelection::RasterOverlay> LoadRasterOverlayImpl() override;
+        std::unique_ptr<CesiumRasterOverlays::RasterOverlay> LoadRasterOverlayImpl() override;
 
         static std::string BingMapsStyleToString(BingMapsStyle style);
 

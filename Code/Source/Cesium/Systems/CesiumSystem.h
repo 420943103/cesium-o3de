@@ -8,7 +8,7 @@
 #include <AzCore/Interface/Interface.h>
 #include <AzCore/RTTI/TypeInfo.h>
 #include <AzCore/std/smart_ptr/unique_ptr.h>
-#include <Cesium3DTilesSelection/CreditSystem.h>
+#include <CesiumUtility/CreditSystem.h>
 #include <CesiumAsync/IAssetAccessor.h>
 #include <CesiumAsync/ITaskProcessor.h>
 #include <spdlog/logger.h>
@@ -40,7 +40,7 @@ namespace Cesium
 
         const std::shared_ptr<spdlog::logger>& GetLogger() const;
 
-        const std::shared_ptr<Cesium3DTilesSelection::CreditSystem>& GetCreditSystem() const;
+        const std::shared_ptr<CesiumUtility::CreditSystem>& GetCreditSystem() const;
 
         const CriticalAssetManager& GetCriticalAssetManager() const;
 
@@ -51,7 +51,7 @@ namespace Cesium
         std::shared_ptr<CesiumAsync::IAssetAccessor> m_localFileAssetAccessor;
         std::shared_ptr<CesiumAsync::ITaskProcessor> m_taskProcessor;
         std::shared_ptr<spdlog::logger> m_logger;
-        std::shared_ptr<Cesium3DTilesSelection::CreditSystem> m_creditSystem;
+        std::shared_ptr<CesiumUtility::CreditSystem> m_creditSystem;
         CriticalAssetManager m_criticalAssetManager;
     };
 } // namespace Cesium
