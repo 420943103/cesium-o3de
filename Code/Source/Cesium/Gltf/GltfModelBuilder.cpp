@@ -2,6 +2,7 @@
 #include "Cesium/Gltf/GltfPrimitiveBuilder.h"
 #include "Cesium/Gltf/GltfLoadContext.h"
 #include "Cesium/Systems/GenericIOManager.h"
+#include <AzCore/std/algorithm.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -58,7 +59,9 @@ namespace Cesium
     {
         // Resize materials to be the same with gltf materials, so that we can use it as a cache.
         // It maybe wasteful when some gltfs has more materials than what are used in the its primitives.
-        result.m_materials.resize(model.materials.size());
+        // Some glTFs (notably terrain tiles) omit the `material` field on primitives and/or have zero materials.
+        // Ensure we always have at least one slot for a default material so primitives can still render.
+        result.m_materials.resize(AZStd::max<size_t>(1, model.materials.size()));
 
         // Resize meshes the same with gltf meshes for caching
         result.m_meshes.resize(model.meshes.size());
@@ -157,14 +160,35 @@ namespace Cesium
         gltfLoadMesh.m_primitives.reserve(mesh.primitives.size());
         for (const CesiumGltf::MeshPrimitive& primitive : mesh.primitives)
         {
-            // create material asset
-            const CesiumGltf::Material* material = model.getSafe<CesiumGltf::Material>(&model.materials, primitive.material);
+            // Create material asset.
+            // glTF allows a primitive to omit `material`. Cesium Native uses -1 in that case.
+            // We must still create geometry and bind a valid materialId, otherwise nothing renders.
+            MaterialId materialId = primitive.material;
+            const CesiumGltf::Material* material = model.getSafe<CesiumGltf::Material>(&model.materials, materialId);
+            CesiumGltf::Material defaultMaterial;
             if (!material)
             {
-                continue;
+                if (model.materials.empty())
+                {
+                    // No materials exist at all; use slot 0 as the default.
+                    materialId = 0;
+                    material = &defaultMaterial;
+                }
+                else
+                {
+                    // Materials exist, but this primitive omitted its material. Use a dedicated default slot
+                    // to avoid overwriting material[0]. Create it once per model.
+                    if (result.m_materials.size() == model.materials.size())
+                    {
+                        result.m_materials.emplace_back();
+                    }
+
+                    materialId = static_cast<MaterialId>(result.m_materials.size() - 1);
+                    material = &defaultMaterial;
+                }
             }
 
-            GltfLoadMaterial& loadMaterial = result.m_materials[primitive.material];
+            GltfLoadMaterial& loadMaterial = result.m_materials[static_cast<size_t>(materialId)];
             if (loadMaterial.IsEmpty())
             {
                 m_materialBuilder->Create(model, *material, result.m_textures, loadMaterial);
@@ -174,6 +198,12 @@ namespace Cesium
             GltfLoadPrimitive& loadPrimitive = gltfLoadMesh.m_primitives.emplace_back();
             GltfTrianglePrimitiveBuilder primitiveBuilder;
             primitiveBuilder.Create(model, primitive, loadMaterial, loadPrimitive);
+
+            // The primitive builder copies `primitive.material` into the result. Override it with our resolved id.
+            if (!loadPrimitive.IsEmpty())
+            {
+                loadPrimitive.m_materialId = materialId;
+            }
         }
     }
 

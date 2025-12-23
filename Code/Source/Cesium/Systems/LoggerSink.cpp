@@ -46,6 +46,7 @@ namespace Cesium
 
         spdlog::memory_buf_t formatted;
         formatter_->format(msg, formatted);
-        return fmt::to_string(formatted);
+        // Avoid calling fmt::to_string to prevent fmt library link-time issues.
+        return std::string(formatted.data(), formatted.size());
     }
 } // namespace Cesium

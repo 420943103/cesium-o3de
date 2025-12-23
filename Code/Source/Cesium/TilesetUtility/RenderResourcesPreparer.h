@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cesium/Gltf/GltfModel.h"
+#include "Cesium/Gltf/GltfModelBuilder.h"
 #include <Atom/RPI.Public/Material/Material.h>
 #include <Atom/RPI.Public/Image/StreamingImage.h>
 #include <Atom/RPI.Reflect/Image/StreamingImageAsset.h>
@@ -10,6 +11,7 @@
 #include <AzCore/std/optional.h>
 #include <AzCore/std/containers/vector.h>
 #include <AzCore/std/containers/map.h>
+#include <AzCore/std/smart_ptr/unique_ptr.h>
 #include <Cesium3DTilesSelection/IPrepareRendererResources.h>
 #include <glm/glm.hpp>
 
@@ -116,5 +118,6 @@ namespace Cesium
         AZStd::vector<AZ::Data::Instance<AZ::RPI::Material>> m_compileMaterialsQueue;
         AZStd::map<const CesiumRasterOverlays::RasterOverlay*, std::uint32_t> m_rasterOverlayLayers;
         AZStd::vector<std::uint32_t> m_freeRasterLayers;
+        AZStd::unique_ptr<GltfModelBuilder> m_modelBuilder;
     };
 } // namespace Cesium

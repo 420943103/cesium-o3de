@@ -32,6 +32,8 @@ namespace Cesium
 {
     const AZ::Data::Asset<AZ::RPI::MaterialTypeAsset>& GltfPBRMaterialBuilder::GetDefaultMaterialType() const
     {
+        // Ensure critical material types are requested and have a chance to become ready.
+        const_cast<CriticalAssetManager&>(CesiumInterface::Get()->GetCriticalAssetManager()).EnsureMaterialTypesLoaded();
         return CesiumInterface::Get()->GetCriticalAssetManager().m_standardPbrMaterialType;
     }
 
@@ -55,6 +57,14 @@ namespace Cesium
         else
         {
             materialTypeAsset = GetDefaultMaterialType();
+        }
+
+        // Abort early if the material type is not ready.
+        if (!materialTypeAsset || !materialTypeAsset.IsReady())
+        {
+            result.m_materialAsset = AZ::Data::Asset<AZ::RPI::MaterialAsset>();
+            result.m_needTangents = false;
+            return;
         }
 
         AZ::Data::AssetId materialAssetId = CesiumInterface::Get()->GetCriticalAssetManager().GenerateRandomAssetId();
@@ -236,7 +246,7 @@ namespace Cesium
 
     void GltfPBRMaterialBuilder::ConfigureOpacity(const CesiumGltf::Material& material, AZ::RPI::MaterialAssetCreator& materialCreator)
     {
-        if (material.alphaMode == CesiumGltf::Material::AlphaMode::OPAQUE)
+        if (material.alphaMode == CesiumGltf::Material::AlphaMode::OPAQUE1)
         {
             materialCreator.SetPropertyValue(AZ::Name("opacity.mode"), static_cast<std::uint32_t>(0));
         }

@@ -72,6 +72,15 @@ ly_add_target(
         CXX_STANDARD_REQUIRED ON
 )
 
+# Add platform-specific libraries for Windows
+if(PAL_PLATFORM_NAME STREQUAL "Windows")
+    target_link_libraries(Cesium.Static 
+        PUBLIC
+            Iphlpapi.lib
+            Secur32.lib
+    )
+endif()
+
 # Here add Cesium target, it depends on the Cesium.Static
 ly_add_target(
     NAME Cesium ${PAL_TRAIT_MONOLITHIC_DRIVEN_MODULE_TYPE}

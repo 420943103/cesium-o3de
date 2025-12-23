@@ -4,6 +4,7 @@
 #include <AzCore/Jobs/JobManager.h>
 #include <AzCore/Jobs/JobContext.h>
 #include <AzCore/Jobs/JobFunction.h>
+#include <AzCore/Debug/Trace.h>
 #include <CesiumUtility/Uri.h>
 #include <CesiumAsync/Promise.h>
 #include <sstream>
@@ -90,6 +91,7 @@ namespace Cesium
             }
             
             // Make the request synchronously
+            AZ_TracePrintf("Cesium", "[HTTP Request] Starting %s request to: %s\n", methodStr.c_str(), url.c_str());
             try
             {
                 CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> requestFuture = 
@@ -114,15 +116,27 @@ namespace Cesium
                     {
                         memcpy(response->m_body.data(), dataSpan.data(), dataSpan.size());
                     }
+                    
+                    AZ_TracePrintf("Cesium", "[HTTP Request] SUCCESS - URL: %s, Status: %d, Content-Type: %s, Body Size: %zu\n", 
+                        url.c_str(), response->m_statusCode, response->m_contentType.c_str(), response->m_body.size());
+                    if (url.find("hkdom") != std::string::npos || url.find("HKdom") != std::string::npos)
+                    {
+                        AZ_TracePrintf("Cesium", "[HTTP Request] DOM Tile Request SUCCESS: %s\n", url.c_str());
+                    }
+                    if (url.find("hkdem") != std::string::npos || url.find("HKdem") != std::string::npos)
+                    {
+                        AZ_TracePrintf("Cesium", "[HTTP Request] DEM Tile Request SUCCESS: %s\n", url.c_str());
+                    }
                 }
                 else
                 {
+                    AZ_Warning("Cesium", false, "[HTTP Request] FAILED - URL: %s, No asset response or request failed.\n", url.c_str());
                     response->m_statusCode = 0;
                 }
             }
             catch (const std::exception& e)
             {
-                // Log error if needed, but don't throw
+                AZ_Error("Cesium", false, "[HTTP Request] EXCEPTION - URL: %s, Error: %s\n", url.c_str(), e.what());
                 response->m_statusCode = 0;
             }
             catch (...)
@@ -206,6 +220,9 @@ namespace Cesium
         void operator()()
         {
             std::string absoluteUrl = CesiumUtility::Uri::resolve(m_request.m_parentPath.c_str(), m_request.m_path.c_str());
+            
+            AZ_TracePrintf("Cesium", "[IO Request] Resolving URL: %s (Parent: %s, Path: %s)\n", 
+                absoluteUrl.c_str(), m_request.m_parentPath.c_str(), m_request.m_path.c_str());
 
             auto httpResponse = m_httpClient->MakeRequest(
                 m_asyncSystem,
@@ -216,10 +233,13 @@ namespace Cesium
             
             if (httpResponse)
             {
+                AZ_TracePrintf("Cesium", "[IO Request] SUCCESS - URL: %s, Body Size: %zu\n", 
+                    absoluteUrl.c_str(), httpResponse->m_body.size());
                 m_promise.resolve(httpResponse->m_body);
             }
             else
             {
+                AZ_Warning("Cesium", false, "[IO Request] FAILED - URL: %s, No HTTP response.\n", absoluteUrl.c_str());
                 m_promise.resolve(IOContent{});
             }
         }

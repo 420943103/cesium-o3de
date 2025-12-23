@@ -3,6 +3,7 @@
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/RTTI/ReflectContext.h>
 #include <AzCore/RTTI/BehaviorContext.h>
+#include <AzCore/Debug/Trace.h>
 
 namespace Cesium
 {
@@ -79,6 +80,7 @@ namespace Cesium
 
     void RasterOverlayComponent::Activate()
     {
+        AZ_TracePrintf("Cesium", "[RasterOverlayComponent] Activating for EntityId: %llu\n", GetEntityId());
         m_impl->m_rasterOverlayContainerLoadedHandler = RasterOverlayContainerLoadedEvent::Handler(
             [this]()
             {
@@ -103,6 +105,7 @@ namespace Cesium
 
     void RasterOverlayComponent::Deactivate()
     {
+        AZ_TracePrintf("Cesium", "[RasterOverlayComponent] Deactivating for EntityId: %llu\n", GetEntityId());
         if (m_impl->m_rasterOverlayObserverPtr)
         {
             RasterOverlayContainerRequestBus::Event(
@@ -125,21 +128,26 @@ namespace Cesium
 
     void RasterOverlayComponent::LoadRasterOverlay()
     {
+        AZ_TracePrintf("Cesium", "[RasterOverlayComponent] LoadRasterOverlay called for EntityId: %llu\n", GetEntityId());
         // remove any existing raster
         Deactivate();
 
         auto rasterOverlay = LoadRasterOverlayImpl();
         m_impl->m_rasterOverlayObserverPtr = rasterOverlay.get();
+        
+        AZ_TracePrintf("Cesium", "[RasterOverlayComponent] RasterOverlay created, attempting to add to container\n");
 
         bool success = false;
         RasterOverlayContainerRequestBus::EventResult(
             success, GetEntityId(), &RasterOverlayContainerRequestBus::Events::AddRasterOverlay, rasterOverlay);
         if (!success)
         {
+            AZ_Warning("Cesium", false, "[RasterOverlayComponent] FAILED to add RasterOverlay to container - EntityId: %llu\n", GetEntityId());
             m_impl->m_rasterOverlayObserverPtr = nullptr;
         }
         else
         {
+            AZ_TracePrintf("Cesium", "[RasterOverlayComponent] SUCCESS - RasterOverlay added to container - EntityId: %llu\n", GetEntityId());
             m_impl->SetupConfiguration(m_configuration);
         }
     }
