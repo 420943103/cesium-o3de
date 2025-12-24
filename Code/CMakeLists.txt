@@ -79,6 +79,14 @@ if(PAL_PLATFORM_NAME STREQUAL "Windows")
             Iphlpapi.lib
             Secur32.lib
     )
+elseif(PAL_PLATFORM_NAME STREQUAL "Linux")
+    # Prefer system curl on Linux so CurlAssetAccessor works out of the box
+    find_package(CURL QUIET)
+    if(CURL_FOUND)
+        target_link_libraries(Cesium.Static PUBLIC CURL::libcurl)
+    else()
+        message(WARNING "Curl not found on this system. Cesium HTTP requests will fail; please install libcurl dev packages.")
+    endif()
 endif()
 
 # Here add Cesium target, it depends on the Cesium.Static
