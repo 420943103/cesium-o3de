@@ -36,7 +36,7 @@ namespace Cesium
     RenderResourcesPreparer::RenderResourcesPreparer(AZ::Render::MeshFeatureProcessorInterface* meshFeatureProcessor)
         : m_meshFeatureProcessor{ meshFeatureProcessor }
         , m_transform{ 1.0 }
-        , m_modelBuilder{ AZStd::make_unique<GltfModelBuilder>(AZStd::make_unique<GltfPBRMaterialBuilder>()) }
+        , m_modelBuilder{ AZStd::make_unique<GltfModelBuilder>(AZStd::make_unique<GltfRasterMaterialBuilder>()) }
     {
         m_freeRasterLayers.reserve(GltfRasterMaterialBuilder::MAX_RASTER_LAYERS);
         for (std::uint32_t i = 0; i < GltfRasterMaterialBuilder::MAX_RASTER_LAYERS; ++i)
