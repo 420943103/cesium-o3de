@@ -90,8 +90,6 @@ namespace Cesium
                 bodySpan = std::span<const std::byte>(bodyBytes.data(), bodyBytes.size());
             }
             
-            // Make the request synchronously
-            AZ_TracePrintf("Cesium", "[HTTP Request] Starting %s request to: %s\n", methodStr.c_str(), url.c_str());
             try
             {
                 CesiumAsync::Future<std::shared_ptr<CesiumAsync::IAssetRequest>> requestFuture = 
@@ -115,17 +113,6 @@ namespace Cesium
                     if (dataSpan.size() > 0)
                     {
                         memcpy(response->m_body.data(), dataSpan.data(), dataSpan.size());
-                    }
-                    
-                    AZ_TracePrintf("Cesium", "[HTTP Request] SUCCESS - URL: %s, Status: %d, Content-Type: %s, Body Size: %zu\n", 
-                        url.c_str(), response->m_statusCode, response->m_contentType.c_str(), response->m_body.size());
-                    if (url.find("hkdom") != std::string::npos || url.find("HKdom") != std::string::npos)
-                    {
-                        AZ_TracePrintf("Cesium", "[HTTP Request] DOM Tile Request SUCCESS: %s\n", url.c_str());
-                    }
-                    if (url.find("hkdem") != std::string::npos || url.find("HKdem") != std::string::npos)
-                    {
-                        AZ_TracePrintf("Cesium", "[HTTP Request] DEM Tile Request SUCCESS: %s\n", url.c_str());
                     }
                 }
                 else
@@ -221,9 +208,6 @@ namespace Cesium
         {
             std::string absoluteUrl = CesiumUtility::Uri::resolve(m_request.m_parentPath.c_str(), m_request.m_path.c_str());
             
-            AZ_TracePrintf("Cesium", "[IO Request] Resolving URL: %s (Parent: %s, Path: %s)\n", 
-                absoluteUrl.c_str(), m_request.m_parentPath.c_str(), m_request.m_path.c_str());
-
             auto httpResponse = m_httpClient->MakeRequest(
                 m_asyncSystem,
                 absoluteUrl,
@@ -233,8 +217,6 @@ namespace Cesium
             
             if (httpResponse)
             {
-                AZ_TracePrintf("Cesium", "[IO Request] SUCCESS - URL: %s, Body Size: %zu\n", 
-                    absoluteUrl.c_str(), httpResponse->m_body.size());
                 m_promise.resolve(httpResponse->m_body);
             }
             else

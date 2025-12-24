@@ -80,7 +80,6 @@ namespace Cesium
         void LoadTileset(const TilesetSource& tilesetSource, const TilesetRenderConfiguration& renderConfiguration)
         {
             TilesetSourceType type = tilesetSource.GetType();
-            AZ_TracePrintf("Cesium", "[TilesetComponent] Loading tileset from source type: %d\n", static_cast<int>(type));
             if (type != TilesetSourceType::None)
             {
                 m_tilesetLoaded = false;
@@ -145,12 +144,10 @@ namespace Cesium
                 return;
             }
 
-            AZ_TracePrintf("Cesium", "[TilesetComponent] Loading tileset from URL: %s\n", source.m_url.c_str());
             Cesium3DTilesSelection::TilesetExternals externals = CreateTilesetExternal(IOKind::Http);
             Cesium3DTilesSelection::TilesetOptions options;
             options.contentOptions.generateMissingNormalsSmooth = renderConfiguration.m_generateMissingNormalAsSmooth;
             m_tileset = AZStd::make_unique<Cesium3DTilesSelection::Tileset>(externals, source.m_url.c_str(), options);
-            AZ_TracePrintf("Cesium", "[TilesetComponent] Tileset created from URL: %s\n", source.m_url.c_str());
         }
 
         void LoadTilesetFromCesiumIon(const TilesetCesiumIonSource& source, const TilesetRenderConfiguration& renderConfiguration)
@@ -169,16 +166,12 @@ namespace Cesium
 
         bool AddRasterOverlay(std::unique_ptr<CesiumRasterOverlays::RasterOverlay>& rasterOverlay) override
         {
-            AZ_TracePrintf("Cesium", "[TilesetComponent] AddRasterOverlay called - RasterOverlay: %p\n", rasterOverlay.get());
             if (m_tileset)
             {
-                AZ_TracePrintf("Cesium", "[TilesetComponent] Tileset exists, attempting to add raster layer\n");
                 if (m_renderResourcesPreparer->AddRasterLayer(rasterOverlay.get()))
                 {
-                    AZ_TracePrintf("Cesium", "[TilesetComponent] Raster layer added to RenderResourcesPreparer\n");
                     CesiumUtility::IntrusivePointer<const CesiumRasterOverlays::RasterOverlay> pOverlay(rasterOverlay.release());
                     m_tileset->getOverlays().add(pOverlay);
-                    AZ_TracePrintf("Cesium", "[TilesetComponent] SUCCESS - RasterOverlay added to tileset overlays\n");
                     return true;
                 }
                 else
@@ -274,7 +267,6 @@ namespace Cesium
 
         void NotifyTilesetLoaded()
         {
-            AZ_TracePrintf("Cesium", "[TilesetComponent] NotifyTilesetLoaded called. TilesetLoaded: %d\n", m_tilesetLoaded);
             if (m_tilesetLoaded)
             {
                 return;
@@ -285,8 +277,6 @@ namespace Cesium
                 auto root = m_tileset->getRootTile();
                 if (root)
                 {
-                    AZ_TracePrintf("Cesium", "[TilesetComponent] Tileset root tile found. Signaling TilesetLoadedEvent.\n");
-                    AZ_TracePrintf("Cesium", "[TilesetComponent] Tileset loaded successfully - Root tile exists\n");
                 }
                 else
                 {
